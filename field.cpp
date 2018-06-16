@@ -1,59 +1,55 @@
 #include <cassert>
 #include "field.h"
 
+
 namespace XO {
-    int Field::GetSquareID(int x, int y){
-        assert(x >= 0);
-        assert(x < m_width);
-        assert(y >= 0);
-        assert(y < m_height);
+    int Field::GetSquareID(int x, int y) {
+        assert(InBounds(x, y));
         return x + y * m_width;
     }
 
     Field::Field(unsigned int w, unsigned int h) :
-            m_width(w), m_height(h), m_squares(w * h, EMPTY) {}
-
-    void Field::Reset(unsigned int w, unsigned int h) {
-        m_width = w;
-        m_height = h;
-        m_squares.assign(w * h, EMPTY);
+            m_width(w), m_height(h), m_square_count(w*h), m_squares(w * h, this) {
+        for(int x = 0; x < m_width; x++){
+            for(int y = 0; y < m_height; y++){
+                m_squares[GetSquareID(x, y)].Init(x, y);
+            }
+        }
     }
 
-    Piece Field::GetPiece(int x, int y) {
+    bool Field::InBounds(int id) const {
+        return id >= 0 && id < m_square_count;
+    }
+
+    bool Field::InBounds(int x, int y) const{
+        return x >= 0
+               && y >= 0
+               && x < m_width
+               && y < m_height;
+    }
+
+    Square &Field::GetSquare(int id) {
+        assert(InBounds(id));
+        return m_squares[id];
+    }
+
+    Square& Field::GetSquare(int x, int y) {
         return m_squares[GetSquareID(x, y)];
     }
 
-    Piece Field::PlacePiece(Piece p, int x, int y) {
-        int id = GetSquareID(x, y);
-        Piece current = m_squares[id];
-        assert(current == EMPTY);
-        m_squares[id] = p;
-        return current;
-    }
-
-    Piece Field::ClearPiece(int x, int y) {
-        int id = GetSquareID(x, y);
-        Piece current = m_squares[id];
-        assert(current == X || current == O);
-        m_squares[id] = EMPTY;
-        return current;
-    }
-
-    int Field::GetWidth() {
+    unsigned int Field::GetWidth() const{
         return m_width;
     }
 
-    int Field::GetHeight() {
+    unsigned int Field::GetHeight() const{
         return m_height;
     }
 
-    int Field::GetSquareCount() {
-        return m_squares.size();
+    unsigned int Field::GetSquareCount() const{
+        return m_square_count;
     }
 
-    bool Field::Middle(int &r_x, int &r_y) {
-        r_x = m_width / 2;
-        r_y = m_height / 2;
-        return m_width && m_height;
+    FieldIterator Field::Middle() {
+        return GetSquare(m_width / 2, m_height / 2).Iter();
     }
 }

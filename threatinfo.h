@@ -4,59 +4,45 @@
 
 #include <string>
 #include <array>
-#include "piecemask.h"
+#include "threatcache.h"
 
 
 namespace XO{
-    const int PLAYER_COUNT = 2;
-    const int THREAT_TIER_COUNT = 6;
     const int THREAT_STRENGTH_COUNT = 2;
-    const int THREAT_TOTAL_COUNT = THREAT_TIER_COUNT * THREAT_STRENGTH_COUNT;
+    const int PLAYER_COUNT = 2;
 
-    const std::string ThreatTierName[] = {
-            "IsWin", "WinThreat", "PreWinThreat", "HaveOpenAlly", "CanWin", "NoThreat"
-    };
 
-    const std::string ThreatStrengthName[] = {
+    constexpr const char* ThreatStrengthName[] = {
             "Single", "Dual"
     };
 
 
-    enum ThreatTier{
-        WIN = 0,
-        WIN_THREAT = 1,
-        PRE_WIN_THREAT = 2,
-        HAVE_OPEN_ALLY = 3,
-        CAN_WIN = 4,
-        NO_THREAT = 5,
-    };
-
-    enum ThreatStrength{
-        SINGLE_THREAT = 0,
-        DUAL_THREAT = 1,
-    };
-
-
-    class ThreatInfo {
+    class ThreatInfo{
+        ValueT m_tier : 3;
+        ValueT m_score : 4;
     public:
-        using ValueT = int8_t;
-    private:
-        std::array<ValueT, THREAT_TOTAL_COUNT> m_ThreatScore;
-        int TStoID(ThreatTier t, ThreatStrength s);
-    public:
-        static void Init();
-
         ThreatInfo();
-        ThreatInfo(PieceMask8 m, Piece p);
-        std::string ToString();
+        void Print() const;
 
-        void SetScore(ThreatTier t, ThreatStrength s, ValueT score);
-        ValueT GetScore(ThreatTier t, ThreatStrength s);
-        ThreatTier TopTier(ThreatStrength s);
+        void Set(ThreatTier t, ValueT score);
+        void SetTier(ThreatTier tier);
+        void SetScore(ValueT score);
+        ThreatTier GetTier() const;
+        ValueT GetScore() const;
+    };
 
-        void operator+=(const ThreatInfo& ti);
-        void operator-=(const ThreatInfo& ti);
-        ThreatInfo Normalize();
+
+    class Square;
+
+    class ThreatInfoSet{
+        friend class ThreatCache;
+        std::array<ThreatInfo, THREAT_STRENGTH_COUNT * PLAYER_COUNT> m_data;
+        ThreatInfo& GetRef(Piece p, ThreatStrength s);
+    public:
+        ThreatInfoSet();
+        const ThreatInfo& GetCRef(Piece p, ThreatStrength s) const;
+        void Print(Piece p, ThreatStrength s) const;
+        void Print() const;
     };
 }
 

@@ -1,9 +1,10 @@
 #ifndef XO_PIECEMASK_H
 #define XO_PIECEMASK_H
 
-#include <cstdint>
-#include <string>
+#include <functional>
+#include <bitset>
 #include "piece.h"
+#include "types.h"
 
 
 namespace XO{
@@ -18,12 +19,15 @@ namespace XO{
         PieceMask8();
         MaskID operator++();
 
-        MaskID GetID();
-        Piece GetPiece(int i);
+        MaskID GetID() const;
+        Piece GetPiece(int i) const;
         void ClearPiece(int i);
         void SetPiece(Piece p, int i);
 
-        std::string ToString();
+        bool IsWin(Piece p) const;
+        std::bitset<8> TestNullMoves(Piece piece, std::function<bool(PieceMask8, Piece)> &P) const;
+
+        std::string ToString() const;
     };
 }
 

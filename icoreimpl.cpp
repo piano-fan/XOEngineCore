@@ -21,13 +21,12 @@ namespace XO{
     }
 
     BestMoveInfo ICoreImpl::MakeBestMove(GomocupStoneID i, bool want_report){
-        int x, y;
-        m_game->DumbBestMove(x, y);
-        m_game->MakeMove(x, y);
+        FieldIterator target = m_game->DumbBestMove();
+        m_game->MakeMove(target);
 
         BestMoveInfo result;
-        result.x = x;
-        result.y = y;
+        result.x = target.GetX();
+        result.y = target.GetY();
         result.variation_count = 0;
         result.max_depth_reached = 0;
         result.custom_info = "";

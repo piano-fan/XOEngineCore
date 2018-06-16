@@ -11,7 +11,7 @@ namespace XO{
         }
 
         std::string Version(){
-            return "0.2";
+            return "1.0";
         }
 
         std::string Author(){
