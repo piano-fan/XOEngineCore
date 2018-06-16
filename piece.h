@@ -5,21 +5,15 @@
 
 
 namespace XO {
-    const std::string PieceName[] = {"~", "X", "O", "#"};
+    const std::string PieceName[] = {"X", "O", "~", "#"};
 
     enum Piece {
-        EMPTY = 0,
-        X = 1,
-        O = 2,
+        X = 0,
+        O = 1,
+        EMPTY = 2,
         OUT_OF_BOUNDS = 3
     };
 
-    enum PieceID {
-        XID = 0,
-        OID = 1,
-    };
-
-    PieceID GetPieceID(Piece p);
     Piece OppositePiece(Piece p);
 }
 

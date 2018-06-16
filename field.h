@@ -2,32 +2,34 @@
 #define XO_FIELD_H
 
 #include <vector>
-#include <functional>
-#include <cstdint>
-#include "piecemask.h"
+#include <array>
+#include <memory>
+#include "fielditerator.h"
+#include "square.h"
+
 
 namespace XO {
     class Field {
         unsigned int m_width = 0;
         unsigned int m_height = 0;
-        std::vector <Piece> m_squares;
+        unsigned int m_square_count = 0;
+        std::vector <Square> m_squares;
 
         int GetSquareID(int x, int y);
     public:
         Field(unsigned int w, unsigned int h);
-        void Reset(unsigned int w, unsigned int h);
 
-        Piece GetPiece(int x, int y);
-        Piece PlacePiece(Piece p, int x, int y);
-        Piece ClearPiece(int x, int y);
+        bool InBounds(int id) const;
+        bool InBounds(int x, int y) const;
+        Square& GetSquare(int id);
+        Square& GetSquare(int x, int y);
 
-        int GetWidth();
-        int GetHeight();
-        int GetSquareCount();
+        unsigned int GetWidth() const;
+        unsigned int GetHeight() const;
+        unsigned int GetSquareCount() const;
 
-        bool Middle(int &r_x, int &r_y);
+        FieldIterator Middle() ;
     };
-
 }
 
 #endif //XO_FIELD_H

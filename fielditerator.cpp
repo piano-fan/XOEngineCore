@@ -1,44 +1,59 @@
-#include "fielditerator.h"
+#include "field.h"
 #include "direction.h"
 #include <cassert>
 
 
 namespace XO{
-    bool FieldIterator::InBounds() const{
-        return m_x >= 0
-            && m_y >= 0
-            && m_x < m_field->GetWidth()
-            && m_y < m_field->GetHeight();
-    }
-
     FieldIterator::FieldIterator(Field* f, int x, int y):
             m_field(f), m_x(x), m_y(y)
     {
-        assert(InBounds());
+        if(f) {
+            m_in_bounds = m_field->InBounds(x, y);
+        }
     }
 
-    Piece FieldIterator::operator++(){
-        assert(InBounds());
+    const Square& FieldIterator::operator*() const{
+        assert(m_field);
+        assert(m_in_bounds);
+        return m_field->GetSquare(m_x, m_y);
+    }
+
+    Piece FieldIterator::GetPiece() const{
+        assert(m_field);
+        if(m_in_bounds){
+            return m_field->GetSquare(m_x, m_y).GetPiece();
+        }
+        else{
+            return OUT_OF_BOUNDS;
+        }
+    }
+
+    FieldIterator& FieldIterator::operator++(){
+        assert(m_field);
+        assert(m_in_bounds);
         m_x++;
         if (m_x >= m_field->GetWidth()) {
             m_x = 0;
             m_y++;
-            if (m_y >= m_field->GetHeight()) {
-                return OUT_OF_BOUNDS;
+            if(m_y >= m_field->GetHeight()){
+                m_in_bounds = false;
             }
         }
-        return m_field->GetPiece(m_x, m_y);
+        return *this;
     }
 
-    Piece FieldIterator::SeekEmpty(){
+    FieldIterator& FieldIterator::SeekEmpty(){
+        assert(m_field);
+        assert(m_in_bounds);
         Piece p = GetPiece();
         while(p != OUT_OF_BOUNDS && p != EMPTY){
-            p = ++*this;
+            p = (++*this).GetPiece();
         }
-        return p;
+        return *this;
     }
 
-    Piece FieldIterator::Step(int dir, bool mirror){
+    FieldIterator& FieldIterator::Step(int dir, bool mirror){
+        assert(m_field);
         if(mirror){
             m_x -= Direction::GetX(dir);
             m_y -= Direction::GetY(dir);
@@ -47,7 +62,8 @@ namespace XO{
             m_x += Direction::GetX(dir);
             m_y += Direction::GetY(dir);
         }
-        return GetPiece();
+        m_in_bounds = m_field->InBounds(m_x, m_y);
+        return *this;
     }
 
     int FieldIterator::GetX() const{
@@ -58,31 +74,8 @@ namespace XO{
         return m_y;
     }
 
-    Piece FieldIterator::GetPiece() const{
-        if(InBounds()){
-            return m_field->GetPiece(m_x, m_y);
-        }
-        else{
-            return OUT_OF_BOUNDS;
-        }
-    }
-
-    bool FieldIterator::IsWin(Piece p) const{
-        for(int dir = 0; dir < 4; dir ++){
-            int count = 0;
-            FieldIterator first = *this;
-            FieldIterator second = first;
-            while(first.Step(dir, true) == p){
-                count++;
-            }
-            while(second.Step(dir, false) == p){
-                count++;
-            }
-            if(count >= 4){
-                return true;
-            }
-        }
-        return false;
+    int FieldIterator::GetValue(Piece p) const{
+        return m_field->GetSquare(m_x, m_y).GetValue(p);
     }
 
     PieceMask8 FieldIterator::MakePiecemask8(int dir) const{
@@ -91,8 +84,8 @@ namespace XO{
         FieldIterator second = first;
 
         for(int i = 3, j = 4; j < 8; i--, j++){
-            result.SetPiece(first.Step(dir, true), i);
-            result.SetPiece(second.Step(dir, false), j);
+            result.SetPiece(first.Step(dir, true).GetPiece(), i);
+            result.SetPiece(second.Step(dir, false).GetPiece(), j);
         }
         return result;
     }

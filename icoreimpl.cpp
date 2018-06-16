@@ -25,9 +25,8 @@ namespace XO{
     }
 
     std::pair<unsigned int, unsigned int> ICoreImpl::GetBestMove(GomocupStoneID i){
-        int x, y;
-        m_game->DumbBestMove(x, y);
-        return {x, y};
+        FieldIterator target = m_game->DumbBestMove();
+        return {target.GetX(), target.GetY()};
     }
 
     EngineStatus ICoreImpl::GetStatus(GomocupStoneID i){
