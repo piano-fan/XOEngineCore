@@ -30,7 +30,7 @@ namespace XO {
     public:
 
         SquareInfo(Field* f, int x, int y);
-        void Print();
+        std::string ToString();
 
         int Compare(SquareInfo &s, Piece own);
 
@@ -69,11 +69,9 @@ namespace XO {
         void MakeMove(const FieldIterator& pos);
         void TakeBack();
 
-        void Print();
-        void PrintSquare(int x, int y);
+        std::string SquareToString(int x, int y);
 
         SquareInfo DumbBestMove(int &r_x, int &r_y);
-        SquareInfo DeepBestMove(int depth, int &r_x, int &r_y);
     };
 }
 

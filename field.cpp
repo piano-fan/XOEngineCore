@@ -1,5 +1,4 @@
 #include <cassert>
-#include <iostream>
 #include "field.h"
 
 namespace XO {
@@ -50,21 +49,6 @@ namespace XO {
 
     int Field::GetSquareCount() {
         return m_squares.size();
-    }
-
-    void Field::Print() {
-        int x = 0;
-        for (Piece &p: m_squares) {
-            if (p == X) std::cout << "X";
-            if (p == O) std::cout << "O";
-            if (p == EMPTY) std::cout << "-";
-
-            x++;
-            if (x >= m_width) {
-                x = 0;
-                std::cout << std::endl;
-            }
-        }
     }
 
     bool Field::Middle(int &r_x, int &r_y) {

@@ -1,5 +1,4 @@
 #include "XO.h"
-#include <iostream>
 #include <cassert>
 #include <algorithm>
 #include <ctime>
@@ -35,17 +34,16 @@ namespace XO {
     }
 
 
-    void SquareInfo::Print(){
+    std::string SquareInfo::ToString(){
+        std::string result = "";
         for(auto &mask: m_masks){
-            mask.Print();
-            std::cout << std::endl << "X: ";
-            ThreatInfo(mask, X).Print();
-            std::cout << std::endl << "O: ";
-            ThreatInfo(mask, O).Print();
-            std::cout << std::endl;
+            result += mask.ToString() + "\n";
+            result += "X: " + ThreatInfo(mask, X).ToString() + "\n";
+            result += "O: " + ThreatInfo(mask, O).ToString() + "\n";
         }
+        return result;
 
-        std::cout << "Total: " << std::endl;
+        /*std::cout << "Total: " << std::endl;  //OLD CODE TLDR
         std::cout << "X: ";
         m_ThreatInfo[XID].Print();
         std::cout << std::endl << "O: ";
@@ -58,7 +56,7 @@ namespace XO {
                   << " " << GetThreatInfo(XO::O).TopTier(DUAL_THREAT);
         std::cout << " TopFinisherTier " << GetFinisherTier(XO::X) << " " << GetFinisherTier(XO::O);
         std::cout << " TopPieceDistance " << GetPieceDistance(XO::X) << " " << GetPieceDistance(XO::O);
-        std::cout << " IsTactical " << (IsTactical()?"True":"False") << std::endl;
+        std::cout << " IsTactical " << (IsTactical()?"True":"False") << std::endl;*/
 
 
     }
@@ -290,18 +288,10 @@ namespace XO {
         SwapMove();
     }
 
-
-    void Game::Print(){
-        m_field->Print();
-        for(int i = 0; i < m_movecount; i++){
-            std::cout << m_movelist[i].first << "|" << m_movelist[i].second << " ";
-        }
-        std::cout << std::endl << "Move: " << (XMove() ? "X" : "O") << std::endl;
-    }
-
-    void Game::PrintSquare(int x, int y){
-        std::cout << x << "/" << y << std::endl;
-        SquareInfo(m_field.get(), x, y).Print();
+    std::string Game::SquareToString(int x, int y){
+        std::string result = std::to_string(x) + "/" + std::to_string(y) + "\n";
+        result += SquareInfo(m_field.get(), x, y).ToString();
+        return result;
     }
 
     SquareInfo Game::DumbBestMove(int &r_x, int &r_y){
@@ -327,38 +317,4 @@ namespace XO {
         }
         return best;
     };
-
-    SquareInfo Game::DeepBestMove(int depth, int &r_x, int &r_y){//TODO: неверный алгоритм - нужно для корня отдельную функцию перебора коренных вариантов
-        if(depth == 0 || m_movecount == 0){ //сложный неоптимизированный пошаговый перебор в несколько циклов
-            return DumbBestMove(r_x, r_y);
-        }
-        assert(depth > 0);
-/*
-        m_field->AnyEmpty(r_x, r_y);
-        MakeMove(r_x, r_y);
-        int next_x, next_y;
-        SquareInfo best = DeepBestMove(depth - 1, next_x, next_y);
-        TakeBack();
-
-        for(int x = 0; x < FieldWidth(); x++) {
-            for (int y = 0; y < FieldHeight(); y++) {
-                if (m_field->GetPiece(x, y) != XO::EMPTY) {
-                    continue;
-                }
-                SquareInfo sq(m_field.get(), x, y);
-                if(sq.GetDualThreatTier(X) >= CAN_WIN && sq.GetDualThreatTier(O) >= CAN_WIN){
-                    continue;
-                }
-                MakeMove(x, y);
-                SquareInfo nextinfo = DeepBestMove(depth - 1, next_x, next_y);
-                if(best.Compare(nextinfo, Move()) < 0){ //TODO: нечетные глубины будут работать некорректно(алгоритм неясен)
-                    best = nextinfo;
-                    r_x = next_x;
-                    r_y = next_y;
-                }
-                TakeBack();
-            }
-        }
-        return best;*/
-    }
 }

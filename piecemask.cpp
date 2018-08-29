@@ -1,5 +1,4 @@
 #include "piecemask.h"
-#include <iostream>
 #include <cassert>
 
 
@@ -37,11 +36,11 @@ namespace XO{
         m_mask |= static_cast<MaskID>(p) << (i << 1);
     }
 
-    void PieceMask8::Print(){
-        std::cout << "Mask ID: " << GetID() << " ";
+    std::string PieceMask8::ToString(){
+        std::string result = "Mask ID: " + std::to_string(GetID()) + " ";
         for(int i = 0; i < 8; i++){
-            std::cout << PieceName[GetPiece(i)];
+            result += PieceName[GetPiece(i)];
         }
-        std::cout << std::endl;
+        return result;
     }
 }

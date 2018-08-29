@@ -24,7 +24,6 @@ namespace XO {
         int GetWidth();
         int GetHeight();
         int GetSquareCount();
-        void Print();
 
         bool Middle(int &r_x, int &r_y);
     };

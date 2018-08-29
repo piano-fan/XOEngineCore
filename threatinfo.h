@@ -48,7 +48,7 @@ namespace XO{
 
         ThreatInfo();
         ThreatInfo(PieceMask8 m, Piece p);
-        void Print();
+        std::string ToString();
 
         void SetScore(ThreatTier t, ThreatStrength s, ValueT score);
         ValueT GetScore(ThreatTier t, ThreatStrength s);

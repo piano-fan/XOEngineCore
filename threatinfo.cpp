@@ -1,5 +1,4 @@
 #include "threatinfo.h"
-#include <iostream>
 
 
 namespace XO{
@@ -116,14 +115,16 @@ namespace XO{
         *this = ThreatInfoCache::ThreatScoreTab[m.GetID()][GetPieceID(p)];
     }
 
-    void ThreatInfo::Print(){
+    std::string ThreatInfo::ToString(){
+        std::string result = "";
         for(int s = 0; s < THREAT_STRENGTH_COUNT; s++) {
-            std::cout << ThreatStrengthName[s] << ": ";
+            result += ThreatStrengthName[s] + ": ";
             for (int t = 0; t < THREAT_TIER_COUNT; t++){
-                std::cout << ThreatTierName[t] << " "
-                          << static_cast<int>(GetScore(static_cast<ThreatTier>(t), static_cast<ThreatStrength>(s))) << " ";
+                result += ThreatTierName[t] + " "
+                + std::to_string(static_cast<int>(GetScore(static_cast<ThreatTier>(t), static_cast<ThreatStrength>(s)))) + " ";
             }
         }
+        return result;
     }
 
     void ThreatInfo::SetScore(ThreatTier t, ThreatStrength s, ThreatInfo::ValueT score){

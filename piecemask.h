@@ -23,7 +23,7 @@ namespace XO{
         void ClearPiece(int i);
         void SetPiece(Piece p, int i);
 
-        void Print();
+        std::string ToString();
     };
 }
 
