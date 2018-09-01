@@ -4,20 +4,26 @@
 
 namespace XO{
     void ICoreImpl::Init(){
-        XO::Init();
-        NewGame();
+        Core::Init();
     }
 
     void ICoreImpl::NewGame(){
-        m_game = std::make_unique<Game>();
+        Core::NewGame();
     }
 
     void ICoreImpl::Resize(unsigned int w, unsigned int h){
-        m_game = std::make_unique<Game>(w, h);
+        if(m_state.GetMetrics().GetWidth() != w
+                || m_state.GetMetrics().GetHeight() != h){
+            Core::Resize(w, h);
+        }
+        else{
+            Core::NewGame();
+        }
     }
 
+    //WARNING! 2.0 and older versions supports ordered move sequences only
     void ICoreImpl::Set(unsigned int x, unsigned int y, GomocupStoneID i){
-        m_game->MakeMove(x, y);
+        Core::MakeMove(m_state.GetMetrics().MakePoint(x, y));
     }
 
     void ICoreImpl::BeginSession(){
@@ -25,8 +31,8 @@ namespace XO{
     }
 
     std::pair<unsigned int, unsigned int> ICoreImpl::GetBestMove(GomocupStoneID i){
-        FieldIterator target = m_game->DumbBestMove();
-        return {target.GetX(), target.GetY()};
+        auto bestmove = Core::BestMove(m_state.GetTurn());
+        return {bestmove.GetX(), bestmove.GetY()};
     }
 
     EngineStatus ICoreImpl::GetStatus(GomocupStoneID i){
@@ -41,7 +47,7 @@ namespace XO{
     }
 
     bool ICoreImpl::IsOver(unsigned int x, unsigned int y, GomocupStoneID i) const {
-        return m_game->GameOver();
+        return Core::IsOver();
     }
 
     std::tuple<std::string, std::string, std::string> ICoreImpl::About() const{
@@ -49,7 +55,7 @@ namespace XO{
     };
 
     std::string ICoreImpl::GetSquareCacheRepr(unsigned int x, unsigned int y) const{
-        return m_game->SquareToString(x, y);
+        return Core::SquareToString(m_state.GetMetrics().MakePoint(x, y));
     }
     std::unique_ptr<ICore> MakeCore()
     {

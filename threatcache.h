@@ -3,28 +3,33 @@
 
 #include <memory>
 #include <array>
-#include "piecemask.h"
+#include "pieceset.h"
+#include "threatinfo.h"
 
 
 namespace XO{
-    class ThreatInfo;
-    class ThreatInfoSet;
+    class ThreatInfoCache{
+        std::unique_ptr<std::array<Threat, TOTAL_MASK_COUNT>> m_data;
 
-    const int TOTAL_MASK_COUNT = 65536;
+        ThreatInfoCache();
+        void Init(Piece p);
+        ThreatInfoCache(ThreatInfoCache const&) = delete;
+        ThreatInfoCache& operator= (ThreatInfoCache const&) = delete;
 
+        Threat& Ref(PieceSet8 mask){
+            return (*m_data)[mask.GetID()];
+        }
 
-    class ThreatCache{
-        std::unique_ptr<std::array<ThreatInfoSet, TOTAL_MASK_COUNT>> m_data;
-        ThreatCache();
-        ThreatCache(ThreatCache const&) = delete;
-        ThreatCache& operator= (ThreatCache const&) = delete;
-        ThreatInfoSet& operator[](PieceMask8 mask);
-        bool Calculated(PieceMask8 mask, Piece p, ThreatStrength s) const;
-        std::function<bool(PieceMask8, Piece)> MakeTierTester(ThreatTier t, ThreatStrength s) const;
-        std::function<bool(PieceMask8, Piece)> MakeBlockerTester(ThreatTier t, ThreatStrength s) const;
+        static ThreatInfoCache m_instance[2];
     public:
-        static const ThreatCache& Instance();
-        const ThreatInfoSet& operator[](PieceMask8 mask) const;
+        static void Init();
+
+        static const ThreatInfoCache& Instance(Piece p){
+            return m_instance[p];
+        }
+        const Threat& operator[](PieceSet8 mask) const{
+            return (*m_data)[mask.GetID()];
+        }
     };
 }
 

@@ -14,7 +14,12 @@ namespace XO {
         OUT_OF_BOUNDS = 3
     };
 
-    Piece OppositePiece(Piece p);
+    inline Piece OppositePiece(Piece p){
+        if (p == X) {
+            return O;
+        }
+        return X;
+    }
 }
 
 #endif //XO_PIECE_H
