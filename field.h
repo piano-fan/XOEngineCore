@@ -1,34 +1,48 @@
 #ifndef XO_FIELD_H
 #define XO_FIELD_H
 
-#include <vector>
-#include <array>
-#include <memory>
-#include "fielditerator.h"
-#include "square.h"
+#include "types.h"
+#include "fieldmetrics.h"
 
 
 namespace XO {
-    class Field {
-        unsigned int m_width = 0;
-        unsigned int m_height = 0;
-        unsigned int m_square_count = 0;
-        std::vector <Square> m_squares;
+    class FieldMetrics;
 
-        int GetSquareID(int x, int y);
+    class Field{
+        std::vector<Piece> m_squares;
+        const FieldMetrics* m_metrics;
     public:
-        Field(unsigned int w, unsigned int h);
+        void NewGame(){
+            m_squares.assign(m_squares.size(), EMPTY);
+        }
+        void Resize(const FieldMetrics* metrics){
+            m_squares.clear();
+            m_squares.resize(metrics->GetSquareCount(), EMPTY);
+            m_metrics = metrics;
+        }
 
-        bool InBounds(int id) const;
-        bool InBounds(int x, int y) const;
-        Square& GetSquare(int id);
-        Square& GetSquare(int x, int y);
+        const Piece& operator[](Point t) const{
+            return m_squares[t.GetID()];
+        }
 
-        unsigned int GetWidth() const;
-        unsigned int GetHeight() const;
-        unsigned int GetSquareCount() const;
+        Piece& operator[](Point t){
+            return m_squares[t.GetID()];
+        }
 
-        FieldIterator Middle() ;
+        std::string ToString() const{
+            int x = 0;
+            std::string message = "";
+            for (Piece p: m_squares) {
+                message += PieceName[p];
+
+                x++;
+                if (x >= m_metrics->GetWidth()) {
+                    x = 0;
+                    message += '\n';
+                }
+            }
+            return message;
+        }
     };
 }
 
