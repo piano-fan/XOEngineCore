@@ -1,47 +1,77 @@
 #include "engineinfo.h"
 #include "icoreimpl.h"
+#include "evaluationmanager.h"
 
 
 namespace XO{
-    void ICoreImpl::Init(){
-        Core::Init();
+    Piece GomokuStoneIDtoPiece(GomocupStoneID i){
+        Piece p;
+        switch(i){
+            case GomocupStoneID::OWN:
+                p = ALLY;
+                break;
+            case GomocupStoneID::OPPONENT:
+                p = ENEMY;
+                break;
+            default:
+                assert(false);
+                return OUT_OF_BOUNDS;
+        }
+        return p;
     }
 
+    ICoreImpl::ICoreImpl()
+        :m_sq_observer(m_metrics)
+    {}
+
+    void ICoreImpl::Init(){}
+
     void ICoreImpl::NewGame(){
-        Core::NewGame();
+        m_sq_observer.NotifyReset();
     }
 
     void ICoreImpl::Resize(unsigned int w, unsigned int h){
-        if(m_state.GetMetrics().GetWidth() != w
-                || m_state.GetMetrics().GetHeight() != h){
-            Core::Resize(w, h);
+        if(m_metrics.GetWidth() != w
+                || m_metrics.GetHeight() != h){
+            m_metrics.Init(w, h);
+            m_sq_observer.NotifyResize(w, h);
         }
         else{
-            Core::NewGame();
+            m_sq_observer.NotifyReset();
         }
     }
 
-    //WARNING! 2.0 and older versions supports ordered move sequences only
-    void ICoreImpl::Set(unsigned int x, unsigned int y, GomocupStoneID i){
-        Core::MakeMove(m_state.GetMetrics().MakePoint(x, y));
+    void ICoreImpl::Set(unsigned int x, unsigned int y, GomocupStoneID i) {
+        //TODO: Renju forbidden moves
+        Piece p = GomokuStoneIDtoPiece(i);
+        m_sq_observer.NotifySetPiece(Move(m_metrics.MakePoint(x, y), p));
     }
 
     BestMoveInfo ICoreImpl::MakeBestMove(GomocupStoneID i, bool want_report){
-        auto bestmove = Core::BestMove(m_state.GetTurn());
-        Core::MakeMove(bestmove);
+        Piece p = GomokuStoneIDtoPiece(i);
+        BaseEvaluator::Data links(m_sq_observer);
 
+        EvaluationManager()(links, p);
+        m_sq_observer.NotifySetPiece(Move(links.result.point, p));
+        
         BestMoveInfo result;
-        result.x = bestmove.GetX();
-        result.y = bestmove.GetY();
+        result.x = links.result.point.GetX();
+        result.y = links.result.point.GetY();
         result.variation_count = 0;
         result.max_depth_reached = 0;
         result.custom_info = "";
+        if(want_report){
+            result.custom_info = links.result.ToString();
+        }
 
         return result;
     }
 
-    bool ICoreImpl::IsOver(unsigned int x, unsigned int y, GomocupStoneID i) const {
-        return Core::IsOver();
+    bool ICoreImpl::IsOver(unsigned int x, unsigned int y, GomocupStoneID i) const{
+        Piece p = GomokuStoneIDtoPiece(i);
+        auto lastmove = Move(m_metrics.MakePoint(x, y), p);
+        return (m_sq_observer.GetMoveCount() >= m_metrics.GetSquareCount())
+            || m_sq_observer.IsWin(lastmove);
     }
 
     std::tuple<std::string, std::string, std::string> ICoreImpl::About() const{
@@ -49,7 +79,7 @@ namespace XO{
     };
 
     std::string ICoreImpl::GetSquareCacheRepr(unsigned int x, unsigned int y) const{
-        return Core::SquareToString(m_state.GetMetrics().MakePoint(x, y));
+        return m_sq_observer.ToString(m_metrics.MakePoint(x, y));
     }
     std::unique_ptr<ICore> MakeCore()
     {
