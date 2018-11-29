@@ -3,7 +3,12 @@ project(XO)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCE_FILES pieceset.h piece.h pieceset.cpp field.h threatinfo.h fieldmetrics.h fieldmetrics.cpp threatcache.h threatcache.cpp types.h core.h core.cpp squarescore.h squarescore.cpp engineinfo.h point.h gameobserver.h gameobserver.cpp movelist.h piecesetcache.h piecesetcache.cpp squarescorecache.h squarescorecache.cpp directioniterator.h gamestate.h gamestate.cpp oldthreatcache.h oldthreatcache.cpp positionscorecache.h positionscorecache.cpp positionscore.h positionscore.cpp icoreimpl.cpp icoreimpl.h Include/icore.h)
-include_directories(Include)
+set(OBSERVER_FILES Observer/pieceset.h Observer/threat.h Observer/threatcache.h Observer/threatcache.cpp Observer/squarescore.h Observer/squarescore.cpp Observer/squareobserver.h Observer/squareobserver.cpp Observer/oldthreatcache.h Observer/sortedthreatset.h Observer/squareinfluence.h Observer/squareinfluence.cpp )
+set(CORE_FILES engineinfo.h icoreimpl.h icoreimpl.cpp staticevaluation.h icoreimpl.cpp icoreimpl.h Include/icore.h Include/builtintypes.h Include/fieldmetrics.h Include/move.h Include/offset_1d.h Include/piece.h Include/point.h Include/staroffset.h Include/math.h evaluationmanager.h)
+include_directories(Include, Observer)
 
-add_library(XO_CORE STATIC ${SOURCE_FILES})
+add_library(XO_OBSERVER STATIC ${OBSERVER_FILES})
+add_library(XO_CORE STATIC ${CORE_FILES})
+target_link_libraries(XO_CORE XO_OBSERVER)
+
+

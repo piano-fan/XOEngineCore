@@ -1,14 +1,14 @@
 #ifndef XO_POINT_H
 #define XO_POINT_H
 
-#include "types.h"
+#include "builtintypes.h"
 
 
 namespace XO{
     class Point{
-        ValueT m_x;
-        ValueT m_y;
-        DValueT m_i;
+        OffsetT m_x;
+        OffsetT m_y;
+        DOffsetT m_i;
     public:
         Point():
                 m_x(0), m_y(0), m_i(0)
@@ -27,6 +27,20 @@ namespace XO{
             return static_cast<int>(m_i);
         }
 
+        bool operator==(const Point& other) const{
+            return GetID() == other.GetID();
+        }
+
+        Point operator-() const{
+            return Point(-m_x, -m_y, -m_i);
+        }
+        Point operator-(const Point& b) const{
+            return Point(m_x - b.m_x, m_y - b.m_y, m_i - b.m_i);
+        }
+        Point operator+(const Point& b) const{
+            return Point(m_x + b.m_x, m_y + b.m_y, m_i + b.m_i);
+        }
+
         Point& operator+=(Point offset){
             m_x += offset.m_x;
             m_y += offset.m_y;
@@ -38,13 +52,6 @@ namespace XO{
             m_x -= offset.m_x;
             m_y -= offset.m_y;
             m_i -= offset.m_i;
-            return *this;
-        }
-
-        Point& MultX4(){
-            m_x <<= 2;
-            m_y <<= 2;
-            m_i <<= 2;
             return *this;
         }
 
