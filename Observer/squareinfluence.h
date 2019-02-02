@@ -4,14 +4,18 @@
 #include "types.h"
 #include "pieceset.h"
 #include "sortedthreatset.h"
+#include "tacticset.h"
 
 
 namespace XO{
     class SquareInfluence{
         std::array<PieceSet8, 4> m_psets;
         std::array<SortedThreatSet, 2> m_threats;
+        std::array<TacticSet, 2> m_tactics;
 
         void UpdateThreats(ValueT dir);
+        void UpdateTactics();
+
     public:
         void ClearPSets(){
             m_psets.fill(PieceSet8());
@@ -29,6 +33,9 @@ namespace XO{
         const SortedThreatSet& GetThreats(Piece p) const{
             return m_threats[p];
         }
+        const TacticSet& GetTactics(Piece p) const{
+            return m_tactics[p];
+        }
 
         std::string ToString() const{
             return GetPieceSet(0).ToString() + "\n"
@@ -36,7 +43,9 @@ namespace XO{
                    + GetPieceSet(2).ToString() + "\n"
                    + GetPieceSet(3).ToString() + "\n"
                    + PieceName[ALLY] + ": " + GetThreats(ALLY).ToString()
-                   + PieceName[ENEMY] + ": " + GetThreats(ENEMY).ToString();
+                   + PieceName[ENEMY] + ": " + GetThreats(ENEMY).ToString()
+                   + GetTactics(ALLY).ToString() + "\n"
+                   + GetTactics(ENEMY).ToString() + "\n";
         }
     };
 }

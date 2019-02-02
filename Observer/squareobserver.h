@@ -67,6 +67,10 @@ namespace XO{
             return GetInfluence(m.GetPos()).GetThreats(m.GetTurn());
         }
 
+        const TacticSet& GetTactics(const Move& m) const{
+            return GetInfluence(m.GetPos()).GetTactics(m.GetTurn());
+        }
+
         bool ValidMove(Point t) const{
             return Metrics().InBounds(t)
                 && GetPiece(t) == EMPTY;
