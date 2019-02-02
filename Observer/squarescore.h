@@ -5,32 +5,32 @@
 
 
 namespace XO {
-    enum class PositionalSquareTier : ValueT {
-        NONE = 0,
-        CAN_SINGLE = 1,
-        CAN_DUAL = 2,
-        CONNECTED = 3,
-        SINGLE_THREAT = 4,
-        DUAL_THREAT = 5,
-        CONNECTED_N_SINGLE_THREAT = 6,
-        CONNECTED_N_DUAL_THREAT = 7,
-        FORCED = 8,
-    };
+    union SquareScore{
+    private:
+        struct Fields{
+            ValueT m_secondary_score;
+            ValueT m_primary_score;
+            ValueT m_secondary_tier : 4;
+            ValueT m_primary_tier : 4;
+            ValueT m_tactical;
+        };
 
-    class SquareScore{
-        PositionalSquareTier m_positional_tier;
-        int m_score;
-        int m_value;
+        Fields m_fields;
+        unsigned int m_value;
+
 	public:
         void Calculate(const SquareInfluence &infl, Piece p);
 
-        int Value() const{
+        unsigned int Value() const{
             return m_value;
         }
 
         std::string ToString() const{
-            return std::string("P:") + std::to_string(static_cast<int>(m_positional_tier))
-                   + " Sc:" + std::to_string(static_cast<int>(m_score))
+            return std::string("Tactics: ") + std::to_string((int)m_fields.m_tactical)
+                   + " 1st T:" + std::to_string((int)m_fields.m_primary_tier)
+                   + " Sc:" + std::to_string((int)m_fields.m_primary_score)
+                   + " 2nd T:" + std::to_string((int)m_fields.m_secondary_tier)
+                   + " Sc:" + std::to_string((int)m_fields.m_secondary_score)
                    + " Val:" + std::to_string(Value());
         }
     };
