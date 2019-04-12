@@ -3,7 +3,7 @@ project(XO)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(OBSERVER_FILES squarescore.h squarescore.cpp squareobserver.h squareobserver.cpp sortedthreatset.h squareinfluence.h squareinfluence.cpp tacticset.h tacticalcache.h tacticalcache.cpp)
+set(OBSERVER_FILES squarescore.h squarescore.cpp squareobserver.h squareobserver.cpp sortedthreatset.h squareinfluence.h squareinfluence.cpp tacticset.h tacticalcache.h tacticalcache.cpp squaretracker.h)
 
 add_library(XO_OBSERVER STATIC ${OBSERVER_FILES})
 add_subdirectory(Threat)

@@ -17,6 +17,8 @@ namespace XO {
     using ValueT = uint8_t;
     using DValueT = uint16_t;
 
+    using DepthT = DValueT;
+
     using OffsetT = int8_t;
     using DOffsetT = int16_t;
 }
