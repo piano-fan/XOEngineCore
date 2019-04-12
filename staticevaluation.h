@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "baseevaluator.h"
+#include "squarescore.h"
 
 
 namespace XO{
@@ -14,17 +15,34 @@ namespace XO{
             unsigned int bestvalue[2] = {0, 0};
             Point top_scored[2];
 
-            for(auto& sq: links.obs.GetSquares()){
-                if(links.obs.GetPiece(sq) != EMPTY){
-                    continue;
-                }
-
+            for(auto& sq_class: {TProperty::D3, TProperty::S4}){
                 for(auto& p: Players){
-                    SquareScore nextscore = links.obs.GetScore(sq, p);
+                    for(auto& sq: links.obs.GetTrackedSquares(p, sq_class)){
+                        SquareScore nextscore;
+                        nextscore.Calculate(links.obs.GetInfluence(sq), p);
 
-                    if(bestvalue[p] < nextscore.Value()){
-                        top_scored[p] = sq;
-                        bestvalue[p] = nextscore.Value();
+                        if(bestvalue[p] < nextscore.Value()){
+                            top_scored[p] = sq;
+                            bestvalue[p] = nextscore.Value();
+                        }
+                    }
+                }
+            }
+
+            if(!bestvalue[ALLY] && !bestvalue[ENEMY]){
+                for(auto& sq: links.obs.GetSquares()){
+                    if(links.obs.GetPiece(sq) != EMPTY){
+                        continue;
+                    }
+
+                    for(auto& p: Players) {
+                        SquareScore nextscore;
+                        nextscore.Calculate(links.obs.GetInfluence(sq), p);
+
+                        if(bestvalue[p] < nextscore.Value()){
+                            top_scored[p] = sq;
+                            bestvalue[p] = nextscore.Value();
+                        }
                     }
                 }
             }

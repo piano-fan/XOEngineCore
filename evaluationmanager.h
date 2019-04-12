@@ -1,7 +1,10 @@
 #ifndef XO_EVALUATIONMANAGER_H
 #define XO_EVALUATIONMANAGER_H
 
+#include "statictactics.h"
+#include "tactics_deprecated.h"
 #include "staticevaluation.h"
+
 
 
 namespace XO{
@@ -16,7 +19,9 @@ namespace XO{
                 return true;
             }
 
-            return StaticEvaluator()(links, own);
+            return StaticTactics()(links, own)
+            || Tactics_Deprecated::Calculate(links, own)
+            || StaticEvaluator()(links, own);
         }
     };
 }

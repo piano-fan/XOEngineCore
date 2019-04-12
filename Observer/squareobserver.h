@@ -2,63 +2,54 @@
 #define XO_PIECESETCACHE_H
 
 #include "squareinfluence.h"
-#include "squarescore.h"
+#include "squaretracker.h"
 
 
 namespace XO{
-    struct SquareData{
-        SquareInfluence influence;
-        std::array<SquareScore, 2> scores;
-        Piece piece;
-
-        void CalculateScore(){
-            scores[ALLY].Calculate(influence, ALLY);
-            scores[ENEMY].Calculate(influence, ENEMY);
-        }
-
-        void OnNeighbourChanged(Piece p, StarOffset self){
-            influence.OnNeighbourChanged(p, self);
-            CalculateScore();
-        }
-
-        std::string ToString() const{
-            return influence.ToString()
-                   + scores[ALLY].ToString() + "\n"
-                   + scores[ENEMY].ToString() + "\n";
-        }
-    };
-
     class FieldMetrics;
     class SquareObserver{
         const FieldMetrics& m_metrics;
 
-        static std::vector<SquareData> m_data_reset_backup;
-        std::vector<SquareData> m_data;
+        static std::vector<SquareInfluence> m_data_reset_backup;
+        std::vector<SquareInfluence> m_data;
+        std::vector<Piece> m_pieces;
         std::vector<Point> m_squares;
+        SquareTracker<6> m_sq_tracker;
         DValueT m_movecount;
 
-        SquareData& GetSqRef(Point t){
+        Piece& GetPieceRef(Point t){
+            return m_pieces[t.GetID()];
+        }
+
+        SquareInfluence& GetInfluenceRef(Point t){
             return m_data[t.GetID()];
         }
 
-        const SquareData& Get(Point t) const{
+        const SquareInfluence& GetInfluenceCRef(Point t) const{
             return m_data[t.GetID()];
         }
+
+        void PromoteSquare(const Point& t, const SquareInfluence& before, const SquareInfluence& after){
+            m_sq_tracker.Update(Move(t, ALLY), before.GetTactics(ALLY), after.GetTactics(ALLY));
+            m_sq_tracker.Update(Move(t, ENEMY), before.GetTactics(ENEMY), after.GetTactics(ENEMY));
+        }
+
+        void ReleaseTrackedSquare(const Point& t, const SquareInfluence& before){
+            m_sq_tracker.Update(Move(t, ALLY), before.GetTactics(ALLY), TacticSet());
+            m_sq_tracker.Update(Move(t, ENEMY), before.GetTactics(ENEMY), TacticSet());
+        }
+
     public:
         SquareObserver(const FieldMetrics& m)
                 :m_metrics(m)
         {}
 
         const SquareInfluence& GetInfluence(Point t) const{
-            return Get(t).influence;
-        }
-
-        const SquareScore& GetScore(Point t, Piece p) const{
-            return Get(t).scores[p];
+            return GetInfluenceCRef(t);
         }
 
         Piece GetPiece(Point t) const{
-            return Get(t).piece;
+            return m_pieces[t.GetID()];
         }
 
         const SortedThreatSet& GetThreats(const Move& m) const{
@@ -79,7 +70,7 @@ namespace XO{
         }
 
         bool IsWin(const Move& m) const{
-            return Get(m.GetPos()).influence.GetThreats(m.GetTurn())[0].IsWin();
+            return GetInfluenceCRef(m.GetPos()).GetThreats(m.GetTurn())[0].IsWin();
         }
 
         DValueT GetMoveCount() const{
@@ -94,12 +85,19 @@ namespace XO{
             return m_metrics;
         }
 
+        const SquareTracker_Container& GetTrackedSquares(Piece p, TProperty square_property) const{
+            return m_sq_tracker.Get(p, static_cast<ValueT>(square_property));
+        }
+
         void NotifySetPiece(const Move& m);
         void NotifyReset();
         void NotifyResize(ValueT w, ValueT h);
 
         std::string ToString(Point t) const{
-            return Get(t).ToString();
+            std::string result = GetInfluenceCRef(t).ToString();
+            result += "\n" + PieceName[ALLY] + ": " + m_sq_tracker.ToString(ALLY);
+            result += "\n" + PieceName[ENEMY] + ": " + m_sq_tracker.ToString(ENEMY);
+            return result;
         }
     };
 }
