@@ -2,46 +2,55 @@
 
 
 namespace XO{
-    std::vector<SquareData> SquareObserver::m_data_reset_backup;
+    std::vector<SquareInfluence> SquareObserver::m_data_reset_backup;
 
 
     void SquareObserver::NotifySetPiece(const Move& m){
-        GetSqRef(m.GetPos()).piece = m.GetTurn();
+        GetPieceRef(m.GetPos()) = m.GetTurn();
+        ReleaseTrackedSquare(m.GetPos(), GetInfluence(m.GetPos()));
         for(auto current = StarOffset::Begin(); current.Valid(); ++current){
             Point t = Metrics().MakePoint(m.GetPos(), current);
             if(!Metrics().InBounds(t)){
                 continue;
             }
-            GetSqRef(t).OnNeighbourChanged(m.GetTurn(), current);
+
+            auto old_influence = GetInfluence(t);
+            GetInfluenceRef(t).OnNeighbourChanged(m.GetTurn(), current);
+            if(GetPiece(t) == EMPTY){
+                PromoteSquare(t, old_influence, GetInfluence(t));
+            }
         }
         ++m_movecount;
     }
 
     void SquareObserver::NotifyReset(){
         m_data = m_data_reset_backup;
+        m_pieces.assign(m_pieces.size(), EMPTY);
+        m_sq_tracker.Clear();
         m_movecount = 0;
     }
 
     void SquareObserver::NotifyResize(ValueT w, ValueT h){
         m_data.resize(Metrics().GetSquareCount());
+        m_pieces.resize(Metrics().GetSquareCount(), EMPTY);
         Metrics().MakePoints(m_squares);
+        m_sq_tracker.Clear();
+        m_sq_tracker.Alloc(Metrics().GetSquareCount());
 
         m_movecount = 0;
         for (const Point &t: m_squares) {
-            auto& sqdata = GetSqRef(t);
-            sqdata.piece = EMPTY;
-            sqdata.influence.ClearPSets();
+            auto& sqdata = GetInfluenceRef(t);
+            sqdata.ClearPSets();
 
             for(auto current = StarOffset::Begin(); current.Valid(); ++current){
                 auto sq = Metrics().MakePoint(t, current);
                 if(!Metrics().InBounds(sq)){
-                    sqdata.influence.AddBounds(current);
+                    sqdata.AddBounds(current);
                     //TODO: достаточно отметить границу 1 раз
                     //и не заполнять все клетки за границей
                 }
             }
-            sqdata.influence.Calculate();
-            sqdata.CalculateScore();
+            sqdata.Calculate();
         }
 
         m_data_reset_backup = m_data;

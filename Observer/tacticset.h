@@ -50,7 +50,8 @@ namespace XO{
                 || (primary.GetTier() == 4
                     && secondary.GetTier() == 4));
             Set(TProperty::S4,
-                primary.GetTier() == 4);
+                primary.GetFullTier() == Threat(4, 0).GetFullTier()
+             && secondary.GetTier() < 4);
             Set(TProperty::D3,
                 primary.GetFullTier() == Threat(3, 1).GetFullTier());
             Set(TProperty::FORK,

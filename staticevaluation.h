@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "squareobserver.h"
+#include "squarescore.h"
 
 
 namespace XO{
@@ -19,17 +20,34 @@ namespace XO{
             unsigned int bestvalue[2] = {0, 0};
             Point top_scored[2];
 
-            for(auto& sq: obs.GetSquares()){
-                if(obs.GetPiece(sq) != EMPTY){
-                    continue;
-                }
-
+            for(auto& sq_class: {TProperty::D4, TProperty::D3, TProperty::S4}){
                 for(auto& p: Players){
-                    SquareScore nextscore = obs.GetScore(sq, p);
+                    for(auto& sq: obs.GetTrackedSquares(p, sq_class)){
+                        SquareScore nextscore;
+                        nextscore.Calculate(obs.GetInfluence(sq), p);
 
-                    if(bestvalue[p] < nextscore.Value()){
-                        top_scored[p] = sq;
-                        bestvalue[p] = nextscore.Value();
+                        if(bestvalue[p] < nextscore.Value()){
+                            top_scored[p] = sq;
+                            bestvalue[p] = nextscore.Value();
+                        }
+                    }
+                }
+            }
+
+            if(!bestvalue[ALLY] && !bestvalue[ENEMY]){
+                for(auto& sq: obs.GetSquares()){
+                    if(obs.GetPiece(sq) != EMPTY){
+                        continue;
+                    }
+
+                    for(auto& p: Players) {
+                        SquareScore nextscore;
+                        nextscore.Calculate(obs.GetInfluence(sq), p);
+
+                        if(bestvalue[p] < nextscore.Value()){
+                            top_scored[p] = sq;
+                            bestvalue[p] = nextscore.Value();
+                        }
                     }
                 }
             }
