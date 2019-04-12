@@ -1,24 +1,16 @@
 #ifndef XO_EVALUATIONMANAGER_H
 #define XO_EVALUATIONMANAGER_H
 
+#include "statictactics.h"
+#include "tactics_deprecated.h"
 #include "staticevaluation.h"
+#include "report.h"
 
 
 namespace XO{
     class EvaluationManager{
         SquareObserver& m_obs;
 
-    public:
-        struct Report{
-            Move m;
-            Piece attacker;
-
-            std::string ToString() const{
-                return std::string() + PieceName[attacker] + " initiative " + m.ToString();
-            }
-        };
-
-    private:
         Report m_current_report;
 
     public:
@@ -39,25 +31,57 @@ namespace XO{
 
             if(obs.GetMoveCount() == 0){
                 m_current_report = Report{
-                        Move(obs.Metrics().Middle(), turn)
-                        , Piece::ALLY
+                        Report::Author::STATIC_EVALUATION
+                        , Report::Type::NONE
+                        , Move(obs.Metrics().Middle(), turn)
+                        , 0
                 };
                 return;
             }
-            
+
+            if(Move mv; StaticTactics::SingleMove(mv, obs, turn)){
+                m_current_report = Report{
+                        Report::Author::STATIC_TACTICS
+                        , Report::Type::NONE
+                        , mv
+                        , 2
+                };
+                return;
+            }
+
+            {
+                StaticTactics()(m_current_report, obs, turn);
+                if(m_current_report.Final()){
+                    return;
+                }
+            }
+
+            if(Move result; Tactics_Deprecated()(result, obs, turn)){
+                m_current_report = Report{
+                        Report::Author::DEPRECATED_TACTICS
+                        , Report::Type::NONE
+                        , result
+                        , 0
+                };
+                return;
+            }
+
             {
                 StaticEvaluator::Report report;
                 StaticEvaluator()(report, obs, turn);
                 m_current_report = Report{
-                        report.m
-                        , report.attacker
+                        Report::Author::STATIC_EVALUATION
+                        , report.attacker == ALLY ? Report::Type::SUCCESS
+                                                  : Report::Type::FAIL
+                        , report.m
+                        , 0
                 };
                 return;
             }
         }
 
         const Move& GetMove() const{
-            return m_current_report.m;
+            return m_current_report.move;
         }
 
         uint64_t GetIterationCount() const{
