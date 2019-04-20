@@ -2,6 +2,7 @@
 #define XO_ICOREPUB_H
 
 #include "squareobserver.h"
+#include "variationmanager.h"
 #include "icore.h"
 
 
@@ -9,6 +10,7 @@ namespace XO{
     class ICoreImpl : public ICore{
         SquareObserver m_sq_observer;
         FieldMetrics m_metrics;
+        VariationManager m_var_manager;
     public:
         ICoreImpl();
 

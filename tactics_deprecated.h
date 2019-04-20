@@ -20,7 +20,7 @@ namespace XO{
             bool operator()(BaseEvaluator::Data& links, Piece defender) const override{
                 auto attacker = OppositePiece(defender);
                 Point center = links.obs.GetTrackedSquares(attacker, TProperty::FORK).front();
-                if(StaticTactics::FullBlocker(links.obs, Move(center, defender), TProperty::FORK)){
+                if(StaticTactics<>::FullBlocker(links.obs, Move(center, defender), TProperty::FORK)){
                     MakeSuccessReport(links, Move(center, defender));
                     return true;
                 }
@@ -28,7 +28,7 @@ namespace XO{
                     Point next = links.obs.Metrics().MakePoint(center, current);
                     if(!links.obs.ValidMove(next)
                        || links.obs.GetThreats(Move(next, attacker))[0].GetTier() < 3  //"cant block"
-                       || !StaticTactics::FullBlocker(links.obs, Move(next, defender)
+                       || !StaticTactics<>::FullBlocker(links.obs, Move(next, defender)
                             , TProperty::FORK)){
                         continue;
                     }

@@ -21,7 +21,7 @@ namespace XO{
     }
 
     ICoreImpl::ICoreImpl()
-        :m_sq_observer(m_metrics)
+        :m_sq_observer(m_metrics), m_var_manager(m_sq_observer)
     {}
 
     void ICoreImpl::Init(){}
@@ -35,6 +35,7 @@ namespace XO{
                 || m_metrics.GetHeight() != h){
             m_metrics.Init(w, h);
             m_sq_observer.NotifyResize(w, h);
+            m_var_manager.Alloc(w * h);
         }
         else{
             m_sq_observer.NotifyReset();
@@ -49,16 +50,16 @@ namespace XO{
 
     BestMoveInfo ICoreImpl::MakeBestMove(GomocupStoneID i, bool want_report){
         Piece p = GomokuStoneIDtoPiece(i);
-        BaseEvaluator::Data links(m_sq_observer);
-
+        BaseEvaluator::Data links(m_sq_observer, m_var_manager);
         EvaluationManager()(links, p);
-        m_sq_observer.NotifySetPiece(Move(links.result.point, p));
+        auto bestmove = links.result.moves.front();
+        m_sq_observer.NotifySetPiece(bestmove);
         
         BestMoveInfo result;
-        result.x = links.result.point.GetX();
-        result.y = links.result.point.GetY();
-        result.variation_count = 0;
-        result.max_depth_reached = 0;
+        result.x = bestmove.GetPos().GetX();
+        result.y = bestmove.GetPos().GetY();
+        result.variation_count = m_var_manager.GetDepthController().ChildCount();
+        result.max_depth_reached = m_var_manager.GetDepthController().HighestDepth();
         result.custom_info = "";
         if(want_report){
             result.custom_info = links.result.ToString();

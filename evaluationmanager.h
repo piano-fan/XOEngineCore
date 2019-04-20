@@ -1,7 +1,7 @@
 #ifndef XO_EVALUATIONMANAGER_H
 #define XO_EVALUATIONMANAGER_H
 
-#include "statictactics.h"
+#include "tactics.h"
 #include "tactics_deprecated.h"
 #include "staticevaluation.h"
 
@@ -19,7 +19,12 @@ namespace XO{
                 return true;
             }
 
-            return StaticTactics()(links, own)
+            static constexpr DValueT DEPTH_LIMIT = -1;
+            links.mgr.Reset();
+            links.mgr.SetDepthLimit(DEPTH_LIMIT);
+
+            return StaticTactics<true>()(links, own)
+            || Tactics()(links, own)
             || Tactics_Deprecated::Calculate(links, own)
             || StaticEvaluator()(links, own);
         }

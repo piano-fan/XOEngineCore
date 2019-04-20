@@ -5,6 +5,7 @@
 
 
 namespace XO{
+    template<bool ONLY_IS_SUCCESS=false>
     class StaticTactics : public BaseEvaluator{
         static void MakeReport(Data& links, const Move& mv, DValueT static_depth
                                 , EvaluationReport::Type type){
@@ -62,8 +63,27 @@ namespace XO{
                 return true;
             }
             if(count == 1){
-                MakeReport(links, Move(sqlist->front(), own), 1, EvaluationReport::Type::NONE);
-                return true;
+                if(ONLY_IS_SUCCESS){
+                    MakeReport(links, Move(sqlist->front(), own), 1, EvaluationReport::Type::SUCCESS);
+                    return true;
+                }
+
+                auto& own_tactics = links.obs.GetTactics(Move(sqlist->front(), own));
+                if(own_tactics.GetProperty(TProperty::D4)){
+                    MakeReport(links, Move(sqlist->front(), own), 3, EvaluationReport::Type::SUCCESS);
+                    return true;
+                }
+
+                if(own_tactics.GetProperty(TProperty::D3_D3)){
+                    auto enemy_t4_list = &links.obs.GetTrackedSquares(OppositePiece(own)
+                            , TProperty::S4);
+                    if(enemy_t4_list->empty()){
+                        MakeReport(links, Move(sqlist->front(), own), 5, EvaluationReport::Type::SUCCESS);
+                        return true;
+                    }
+                }
+
+                return false;
             }
 
             //Simple fork check
