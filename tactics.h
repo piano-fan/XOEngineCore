@@ -8,7 +8,7 @@ namespace XO{
     class Tactics : public BaseEvaluator{
     public:
         void operator()(Data& links, Piece own) const override{
-            Scan4SOnly<StaticTacticsAdapter>()(links, own);
+            Scan4S3D<StaticTacticsAdapter>()(links, own);
         }
     };
 }

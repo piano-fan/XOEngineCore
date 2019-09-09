@@ -27,7 +27,7 @@ namespace XO{
                 return;
             }
 
-            static constexpr DepthT DEPTH_LIMIT = -1;
+            static constexpr DepthT DEPTH_LIMIT = 14;
             links.mgr.SetDepthLimit(DEPTH_LIMIT);
 
             if(P_Final<Tactics>()(links, own)){
