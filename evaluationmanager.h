@@ -57,7 +57,7 @@ namespace XO{
                 return;
             }
 
-            static constexpr DepthT MAX_DEPTH_LIMIT = 100;
+            static constexpr DepthT MAX_DEPTH_LIMIT = 14;
 
             mgr.Reset(turn);
             mgr.Alloc(MAX_DEPTH_LIMIT + 2);
