@@ -55,7 +55,7 @@ namespace XO{
         void TestVariation(PositionData& target, VariationManager& mgr, const Move& mv) const;
 
         void TryScanVariations(PositionData& target, VariationManager& mgr, Piece turn) const{
-            for(auto& sqclass: {TProperty::S4}){
+            for(auto& sqclass: {TProperty::S4, TProperty::D3}){
                 std::list<Point> targets[4];
                 for(auto gen = MoveGenerator(mgr.GetObserver(), turn, sqclass)
                     ; gen.Valid(); gen.Next()){
@@ -81,6 +81,11 @@ namespace XO{
                 BranchS4(target, mgr, turn);
                 return;
             }
+
+            else if(mgr.GetObserver().HaveSquares(attacker, TProperty::D4)){
+                BranchD3(target, mgr, turn);
+                return;
+            }
         }
 
     private:
@@ -90,6 +95,37 @@ namespace XO{
             Variation var(ForcedWinCalculator(), mgr, Move(blocker, turn));
 
             CloneChildData(target, var);
+        }
+
+        void BranchD3(PositionData& target, VariationManager& mgr, Piece turn) const{
+            target.SetReport(Report(
+                Report::Author::STATIC_TACTICS
+                , Report::Type::SUCCESS
+                , Move()
+                , 4));
+
+            std::vector<Point> reactions;
+            for(MoveGenerator d4_blockers(mgr.GetObserver(), turn, TProperty::ANY)
+                ; d4_blockers.Valid(); d4_blockers.Next()){
+                reactions.push_back(d4_blockers.Get());
+            }
+            for(MoveGenerator gen(mgr.GetObserver(), turn, TProperty::S4)
+                ; gen.Valid(); gen.Next()){
+                reactions.push_back(gen.Get());
+            }
+
+            for(auto& sq: reactions){
+                Variation var(ForcedWinCalculator(), mgr, Move(sq, turn));
+
+                if(!var.GetData().GetReport().Success()){
+                    CloneChildData(target, var);
+                    return;
+                }
+
+                if(var.GetData().FullDepth() > target.FullDepth()){
+                    CloneChildData(target, var);
+                }
+            }
         }
     };
 
