@@ -19,7 +19,7 @@ namespace XO{
                 return true;
             }
 
-            static constexpr DValueT DEPTH_LIMIT = -1;
+            static constexpr DValueT DEPTH_LIMIT = 14;
             links.mgr.Reset();
             links.mgr.SetDepthLimit(DEPTH_LIMIT);
 

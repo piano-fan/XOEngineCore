@@ -67,13 +67,6 @@ namespace XO{
                 :   TacticSet(set[0], set[1])
         {}
 
-        ValueT Value() const{
-            return (static_cast<ValueT>(GetProperty(TProperty::WIN)) << 3)
-                    + (static_cast<ValueT>(GetProperty(TProperty::FORK)) << 2)
-                    + (static_cast<ValueT>(GetProperty(TProperty::S4)) << 1)
-                    + static_cast<ValueT>(GetProperty(TProperty::TACTICAL));
-        }
-
         constexpr bool GetProperty(TProperty property) const{
             return AnyOf(property);
         }

@@ -41,28 +41,8 @@ namespace XO{
 
         [[deprecated("Old tactics")]]
         static bool Calculate(BaseEvaluator::Data& links, Piece own){
-            auto opp = OppositePiece(own);
-            unsigned int bestvalue[2] = {0, 0};
-            Point top_scored[2];
-
-            for(auto &p: Players){
-                for(auto &sq: links.obs.GetTrackedSquares(p, TProperty::FORK)){
-                    auto nextscore = links.obs.GetTactics(Move(sq, p));
-
-                    if(bestvalue[p] < nextscore.Value()){
-                        top_scored[p] = sq;
-                        bestvalue[p] = nextscore.Value();
-                    }
-                }
-            }
-            if(bestvalue[own] == 0 && bestvalue[opp] == 0){
-                return false;
-            }
-            if(bestvalue[own] >= bestvalue[opp]){
-                MakeSuccessReport(links, Move(top_scored[own], own));//TODO: remove
-                return true;
-            }
-            else{
+            auto& forks = links.obs.GetTrackedSquares(OppositePiece(own), TProperty::FORK);
+            if(!forks.empty()){
                 //TODO: решение проблемы с 2мя угрозами вида:
                 //OOO~*X~~~ + #~~X*O~OO - здесь определяются 2 угрозы в открытой троечке + угроза в звездочке
                 //        и правый край троечки не распознается как блокер для всех 3х угроз
@@ -72,7 +52,6 @@ namespace XO{
                 //TODO2: решена задача полной ликвидации форсированных угроз
                 //      решить проблему выбора наилучшего неполного блокера и найти пример позиции
                 //      в которой обычный алгоритм ошибается, а полная блокировка невозможна
-                auto& forks = links.obs.GetTrackedSquares(opp, TProperty::FORK);
                 if(forks.size() > 1){
                     if(FindForkBlocker()(links, own)){
                         return true;

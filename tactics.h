@@ -8,7 +8,7 @@ namespace XO{
     class Tactics : public BaseEvaluator{
     public:
         bool operator()(Data& links, Piece own) const override{
-            return Scan4SOnly<StaticTactics<>>()(links, own);
+            return Scan4S3D<StaticTactics<>>()(links, own);
         }
     };
 }
