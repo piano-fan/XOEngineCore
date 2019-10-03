@@ -13,12 +13,14 @@ namespace XO{
     public:
         bool operator()(BaseEvaluator::Data& links, Piece own) const override{
             auto blocker = links.obs.GetTrackedSquares(own, TProperty::WIN).front();
-            auto v_answer = AutoVariation(links.mgr, Move(blocker, OppositePiece(own)));
 
-            EvAgent()(links, own);
+            if(!links.mgr.GetCachedReport(links, Move(blocker, OppositePiece(own)))){
+                auto v_answer = AutoVariation(links.mgr, Move(blocker, OppositePiece(own)));
+                EvAgent()(links, own);
+            }
 
             if(links.result.Success()){
-                links.result.moves.push_front(v_answer);
+                links.result.moves.push_front(Move(blocker, OppositePiece(own)));
             }
 
             return links.result.Final();
@@ -46,6 +48,9 @@ namespace XO{
         bool operator()(Data& links, Piece own) const override{
             EvAgent()(links, own)
                 || VariationScanner<S4Variation, BranchS4<Scan4SOnly<EvAgent>>>()(links, own);
+            if(links.result.Final()){
+                links.mgr.WriteCachedReport(links.result);
+            }
             return links.result.Final();
         }
     };
@@ -69,8 +74,11 @@ namespace XO{
             D4BlockerGenerator blocks(links.mgr, own);
             for(; blocks.Valid(); blocks.Next()){
                 BaseEvaluator::Data next_links{links};
-                auto v_answer = AutoVariation(links.mgr, blocks.Get());
-                EvAgent()(next_links, own);
+                if(!links.mgr.GetCachedReport(next_links, blocks.Get())){
+                    auto v_answer = AutoVariation(links.mgr, blocks.Get());
+                    EvAgent()(next_links, own);
+                }
+
                 if(!next_links.result.Success()){
                     if(next_links.result.DepthLimit()){
                         links.result = std::move(next_links.result);
@@ -150,6 +158,7 @@ namespace XO{
                 || VariationScanner<S4Variation, BranchS4<Scan4SOnly<EvAgent>>>()(links, own)
                 || VariationScanner<S4Variation, BranchS4<Scan4S3D<EvAgent>>>()(links, own)
                 || VariationScanner<D3Variation, BranchD3<Scan4S3D<EvAgent>>>()(links, own);
+            links.mgr.WriteCachedReport(links.result);
             return links.result.Final();
         }
     };
