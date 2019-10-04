@@ -22,6 +22,8 @@ namespace XO{
             m_child_counter = 0;
             m_highest_depth = 0;
             m_depth_limit = 0;
+            m_depth_warning = false;
+            m_counter_warning = false;
         }
 
         void SetDepthLimit(DepthT depth_limit){
@@ -32,6 +34,12 @@ namespace XO{
             ++m_child_counter;
             if(new_depth > m_highest_depth){
                 m_highest_depth = new_depth;
+                if(m_highest_depth > 30){
+                    m_depth_warning = true;
+                }
+            }
+            if(!(m_child_counter % 1000000)){
+                m_counter_warning = true;
             }
         }
 
@@ -49,6 +57,22 @@ namespace XO{
 
         bool AtMaxDepth(DepthT current_depth) const{
             return current_depth >= DepthLimit();
+        }
+
+        bool PullDepthWarning(){
+            if(m_depth_warning){
+                m_depth_warning = false;
+                return true;
+            }
+            return false;
+        }
+
+        bool PullCounterWarning(){
+            if(m_counter_warning){
+                m_counter_warning = false;
+                return true;
+            }
+            return false;
         }
 
         std::string ToString() const{
