@@ -1,6 +1,7 @@
 #ifndef XO_VARIATIONMANAGER_H
 #define XO_VARIATIONMANAGER_H
 
+#include <iostream>
 #include "squareobserver.h"
 #include "depth_manager.h"
 #include "baseevaluator.h"
@@ -86,6 +87,12 @@ namespace XO{
             m_hash_key.SetPiece(*m);
 
             m_depth_controller.OnNewVariation(GetDepth());
+            if(m_depth_controller.PullDepthWarning()){
+                std::cerr << "(!)Depth " << std::to_string(GetDepth()) << std::endl;
+            }
+            if(m_depth_controller.PullCounterWarning()){
+                std::cerr << "(!)" << ToString() << std::endl;
+            }
         }
 
         void TakeBack(const AbstractVariation* m){
