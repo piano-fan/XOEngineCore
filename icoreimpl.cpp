@@ -21,13 +21,14 @@ namespace XO{
     }
 
     ICoreImpl::ICoreImpl()
-        :m_sq_observer(m_metrics), m_var_manager(m_sq_observer)
+        :m_sq_observer(m_metrics), m_var_manager(m_sq_observer, m_position_hash_key)
     {}
 
     void ICoreImpl::Init(){}
 
     void ICoreImpl::NewGame(){
         m_sq_observer.NotifyReset();
+        m_position_hash_key.Clear();
     }
 
     void ICoreImpl::Resize(unsigned int w, unsigned int h){
@@ -35,10 +36,12 @@ namespace XO{
                 || m_metrics.GetHeight() != h){
             m_metrics.Init(w, h);
             m_sq_observer.NotifyResize(w, h);
+            m_position_hash_key.Resize(w * h);
             m_var_manager.Alloc(w * h);
         }
         else{
             m_sq_observer.NotifyReset();
+            m_position_hash_key.Clear();
         }
     }
 
@@ -46,6 +49,7 @@ namespace XO{
         //TODO: Renju forbidden moves
         Piece p = GomokuStoneIDtoPiece(i);
         m_sq_observer.NotifySetPiece(Move(m_metrics.MakePoint(x, y), p));
+        m_position_hash_key.SetPiece(Move(m_metrics.MakePoint(x, y), p));
     }
 
     BestMoveInfo ICoreImpl::MakeBestMove(GomocupStoneID i, bool want_report){
@@ -54,6 +58,7 @@ namespace XO{
         EvaluationManager()(links, p);
         auto bestmove = links.result.moves.front();
         m_sq_observer.NotifySetPiece(bestmove);
+        m_position_hash_key.SetPiece(bestmove);
         
         BestMoveInfo result;
         result.x = bestmove.GetPos().GetX();

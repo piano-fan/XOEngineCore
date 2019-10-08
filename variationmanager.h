@@ -23,12 +23,13 @@ namespace XO{
 
     private:
         SquareObserver& m_obs;
+        DynamicPieceSet& m_hash_key;
         MoveList m_moves;
         DepthManager m_depth_controller;
 
     public:
-        VariationManager(SquareObserver& obs)
-            :m_obs(obs), m_depth_controller()
+        VariationManager(SquareObserver& obs, DynamicPieceSet& hash_key)
+            :m_obs(obs), m_hash_key(hash_key), m_depth_controller()
         {}
 
         void Alloc(DValueT move_count){
@@ -46,12 +47,14 @@ namespace XO{
         void MakeMove(const AbstractVariation* m){
             m_moves.push_back(m);
             m_obs.NotifySetPiece(*m);
+            m_hash_key.SetPiece(*m);
 
             m_depth_controller.OnNewVariation(GetDepth());
         }
 
         void TakeBack(const AbstractVariation* m){
             m_obs.NotifyRemovePiece(*m);
+            m_hash_key.RemovePiece(*m);
             m_moves.pop_back();
         }
 

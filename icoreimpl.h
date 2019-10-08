@@ -11,6 +11,7 @@ namespace XO{
         SquareObserver m_sq_observer;
         FieldMetrics m_metrics;
         VariationManager m_var_manager;
+        DynamicPieceSet m_position_hash_key;
     public:
         ICoreImpl();
 
