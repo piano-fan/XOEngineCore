@@ -3,6 +3,7 @@
 
 #include "squareobserver.h"
 #include "depth_manager.h"
+#include "baseevaluator.h"
 
 
 namespace XO{
@@ -22,12 +23,45 @@ namespace XO{
         using MoveList = std::vector<const AbstractVariation*>;
 
     private:
+        using ReportCache = std::map<DynamicPieceSet, EvaluationReport>;
+
         SquareObserver& m_obs;
         DynamicPieceSet& m_hash_key;
         MoveList m_moves;
         DepthManager m_depth_controller;
+        mutable ReportCache m_reports;
+
+        ReportCache::const_iterator CurrentCachedReport() const{
+            return m_reports.find(m_hash_key);
+        }
+
+        bool ValidCachedReport(const ReportCache::const_iterator &iter) const{
+            return iter != m_reports.end();
+        }
 
     public:
+        bool GetCachedReport(BaseEvaluator::Data &links, const Move &m) const{
+            m_hash_key.SetPiece(m);
+            auto report_iter = CurrentCachedReport();
+            bool valid = ValidCachedReport(report_iter);
+            m_hash_key.RemovePiece(m);
+            if(valid){
+                links.result = (*report_iter).second;
+            }
+            return valid;
+        }
+
+        void WriteCachedReport(const EvaluationReport &result){
+            auto report_iter = CurrentCachedReport();
+            bool valid = ValidCachedReport(report_iter);
+            assert(!valid);
+            m_reports[m_hash_key] = result;
+        }
+
+        uint64_t PositionCount(){
+            return m_reports.size();
+        }
+
         VariationManager(SquareObserver& obs, DynamicPieceSet& hash_key)
             :m_obs(obs), m_hash_key(hash_key), m_depth_controller()
         {}
@@ -38,10 +72,12 @@ namespace XO{
 
         void Reset(){
             m_depth_controller.Reset();
+            m_reports.clear();
         }
 
         void SetDepthLimit(DValueT depth_limit){
             m_depth_controller.SetDepthLimit(depth_limit);
+            m_reports.clear();
         }
 
         void MakeMove(const AbstractVariation* m){

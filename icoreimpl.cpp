@@ -67,7 +67,9 @@ namespace XO{
         result.max_depth_reached = m_var_manager.GetDepthController().HighestDepth();
         result.custom_info = "";
         if(want_report){
-            result.custom_info = links.result.ToString();
+            result.custom_info = links.result.ToString()
+                    + " Total positions cached: "
+                    + std::to_string(links.mgr.PositionCount());
         }
 
         return result;
