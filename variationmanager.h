@@ -40,12 +40,25 @@ namespace XO{
             return iter != m_reports.end();
         }
 
+        bool OldCachedReport(const ReportCache::const_iterator &iter) const{
+            if(iter->second.DepthLimit()){
+                if(iter->second.local_depth != GetDepthController().DepthLimit()){
+                    return true;
+                }
+            }
+            return false;
+        }
+
     public:
         bool GetCachedReport(BaseEvaluator::Data &links, const Move &m) const{
             m_hash_key.SetPiece(m);
             auto report_iter = CurrentCachedReport();
             bool valid = ValidCachedReport(report_iter);
             m_hash_key.RemovePiece(m);
+            if(valid && OldCachedReport(report_iter)){
+                m_reports.erase(report_iter);
+                valid = false;
+            }
             if(valid){
                 links.result = (*report_iter).second;
             }
@@ -55,6 +68,10 @@ namespace XO{
         void WriteCachedReport(const EvaluationReport &result){
             auto report_iter = CurrentCachedReport();
             bool valid = ValidCachedReport(report_iter);
+            if(valid && OldCachedReport(report_iter)){
+                m_reports.erase(report_iter);
+                valid = false;
+            }
             assert(!valid);
             m_reports[m_hash_key] = result;
         }
@@ -78,7 +95,6 @@ namespace XO{
 
         void SetDepthLimit(DValueT depth_limit){
             m_depth_controller.SetDepthLimit(depth_limit);
-            m_reports.clear();
         }
 
         void MakeMove(const AbstractVariation* m){
