@@ -27,11 +27,16 @@ namespace XO{
                 return;
             }
 
-            static constexpr DepthT DEPTH_LIMIT = 14;
-            links.mgr.SetDepthLimit(DEPTH_LIMIT);
-
-            if(P_Final<Tactics>()(links, own)){
-                return;
+            static constexpr DepthT MAX_DEPTH_LIMIT = 18;
+            for(auto depth = 2; depth <= MAX_DEPTH_LIMIT; depth += 2){
+                links.result.Clear();
+                links.mgr.SetDepthLimit(depth);
+                if(P_Final<Tactics>()(links, own)){
+                    return;
+                }
+                if(!links.result.DepthLimit()){
+                    break;
+                }
             }
 
             if(Move result; Tactics_Deprecated()(result, links.obs, own)){
