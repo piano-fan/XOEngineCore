@@ -19,13 +19,25 @@ namespace XO{
                 return true;
             }
 
-            static constexpr DValueT DEPTH_LIMIT = 14;
             links.mgr.Reset();
-            links.mgr.SetDepthLimit(DEPTH_LIMIT);
 
-            return StaticTactics<true>()(links, own)
-            || Tactics()(links, own)
-            || Tactics_Deprecated::Calculate(links, own)
+            if(StaticTactics<true>()(links, own)){
+                return true;
+            }
+
+            static constexpr DValueT MAX_DEPTH_LIMIT = 20;
+            for(auto depth = 2; depth <= MAX_DEPTH_LIMIT; depth += 2){
+                links.mgr.SetDepthLimit(depth);
+                Tactics()(links, own);
+                if(links.result.Final()){
+                    return true;
+                }
+                if(!links.result.DepthLimit()){
+                    break;
+                }
+            }
+
+            return Tactics_Deprecated::Calculate(links, own)
             || StaticEvaluator()(links, own);
         }
     };
