@@ -41,6 +41,34 @@ namespace XO{
 
         [[deprecated("Old tactics")]]
         static bool Calculate(BaseEvaluator::Data& links, Piece own){
+            auto& d4s = links.obs.GetTrackedSquares(OppositePiece(own), TProperty::D4);
+            if(!d4s.empty()){
+                auto generator = D4BlockerGenerator(links.mgr, OppositePiece(own));
+                for(; generator.Valid(); generator.Next()){
+                    AutoVariation candidate(links.mgr, generator.Get());
+                    BaseEvaluator::Data next_links(links);
+                    Tactics()(next_links, OppositePiece(own));
+                    if(next_links.result.Success()){
+                        continue;
+                    }
+                    if(!next_links.result.DepthLimit()){
+                        new(&links.result) EvaluationReport(generator.Get()
+                                    , 1
+                                    , EvaluationReport::Mode::DEPRECATED
+                                    , EvaluationReport::Type::SUCCESS
+                                );
+                        return true;
+                    }
+                    else{
+                        new(&links.result) EvaluationReport(generator.Get()
+                                , 1
+                                , EvaluationReport::Mode::DEPRECATED
+                                , EvaluationReport::Type::DEPTH_LIMIT
+                        );
+                    }
+                }
+                return false;
+            }
             auto& forks = links.obs.GetTrackedSquares(OppositePiece(own), TProperty::FORK);
             if(!forks.empty()){
                 //TODO: решение проблемы с 2мя угрозами вида:
