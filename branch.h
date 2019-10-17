@@ -92,6 +92,36 @@ namespace XO{
                         , EvaluationReport::Type::SUCCESS);
             }
 
+            TrackedMoveGenerator<TProperty::S4> generator(links.mgr, OppositePiece(own));
+            for(; generator.Valid(); generator.Next()){
+                BaseEvaluator::Data blocker_links(links);
+                //TODO: придумать как вынести отдельной функцией
+                auto v_start = AutoVariation(links.mgr, generator.Get());
+                StaticTactics<>()(blocker_links, own);
+                if(blocker_links.result.Success()){
+                    continue;
+                }
+                auto blocker = links.obs.GetTrackedSquares(OppositePiece(own), TProperty::WIN).front();
+                auto v_answer = AutoVariation(links.mgr, Move(blocker, own));
+                //ODOT:
+                StaticTactics<>()(blocker_links, OppositePiece(own));
+                if(blocker_links.result.Success()){
+                    return false;
+                }
+                if(!links.obs.GetTrackedSquares(own, TProperty::WIN).empty()){
+                    BranchS4<EvAgent>()(blocker_links, own);
+                }
+                else if(!links.obs.GetTrackedSquares(own, TProperty::D4).empty()){
+                    BranchD3<EvAgent>()(blocker_links, own);
+                }
+                else{
+                    return false;
+                }
+                if(!blocker_links.result.Success()){
+                    return false;
+                }
+            }
+
             links.result = std::move(report_candidate);
             return links.result.Final();
         }
