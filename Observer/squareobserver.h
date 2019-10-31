@@ -11,10 +11,14 @@ namespace XO{
         const FieldMetrics& m_metrics;
 
         static std::vector<SquareInfluence> m_data_reset_backup;
+        using SqDataStackNode = std::array<SquareInfluence, StarOffset::TOTAL_OFFSETS>;
+        using SqDataStack = std::vector<SqDataStackNode>;
+
         std::vector<SquareInfluence> m_data;
         std::vector<Piece> m_pieces;
         std::vector<Point> m_squares;
         SquareTracker<6> m_sq_tracker;
+        std::unique_ptr<SqDataStack> m_sqdata_stack;
         DValueT m_movecount;
 
         Piece& GetPieceRef(Point t){
@@ -29,6 +33,15 @@ namespace XO{
             return m_data[t.GetID()];
         }
 
+        SquareInfluence& GetInfluenceBackupRef(StarOffset offset){
+            return (*m_sqdata_stack)[m_movecount][offset.ID()];
+        }
+
+        void InitTrackedSquare(const Point& t, const SquareInfluence& current){
+            m_sq_tracker.Update(Move(t, ALLY), TacticSet(), current.GetTactics(ALLY));
+            m_sq_tracker.Update(Move(t, ENEMY), TacticSet(), current.GetTactics(ENEMY));
+        }
+
         void PromoteSquare(const Point& t, const SquareInfluence& before, const SquareInfluence& after){
             m_sq_tracker.Update(Move(t, ALLY), before.GetTactics(ALLY), after.GetTactics(ALLY));
             m_sq_tracker.Update(Move(t, ENEMY), before.GetTactics(ENEMY), after.GetTactics(ENEMY));
@@ -41,7 +54,8 @@ namespace XO{
 
     public:
         SquareObserver(const FieldMetrics& m)
-                :m_metrics(m)
+                :m_sqdata_stack(std::make_unique<SqDataStack>())
+                , m_metrics(m)
         {}
 
         const SquareInfluence& GetInfluence(Point t) const{
@@ -102,6 +116,7 @@ namespace XO{
         }
 
         void NotifySetPiece(const Move& m);
+        void NotifyRemovePiece(const Move& m);
         void NotifyReset();
         void NotifyResize(ValueT w, ValueT h);
 
