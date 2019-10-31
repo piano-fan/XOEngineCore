@@ -14,13 +14,29 @@ namespace XO{
                 continue;
             }
 
-            auto old_influence = GetInfluence(t);
+            GetInfluenceBackupRef(current) = GetInfluence(t);
             GetInfluenceRef(t).OnNeighbourChanged(m.GetTurn(), current);
             if(GetPiece(t) == EMPTY){
-                PromoteSquare(t, old_influence, GetInfluence(t));
+                PromoteSquare(t, GetInfluenceBackupRef(current), GetInfluence(t));
             }
         }
         ++m_movecount;
+    }
+
+    void SquareObserver::NotifyRemovePiece(const Move& m){
+        --m_movecount;
+        GetPieceRef(m.GetPos()) = EMPTY;
+        InitTrackedSquare(m.GetPos(), GetInfluence(m.GetPos()));
+        for(auto current = StarOffset::Begin(); current.Valid(); ++current){
+            Point t = Metrics().MakePoint(m.GetPos(), current);
+            if(!Metrics().InBounds(t)){
+                continue;
+            }
+            if(GetPiece(t) == EMPTY){
+                PromoteSquare(t, GetInfluence(t), GetInfluenceBackupRef(current));
+            }
+            GetInfluenceRef(t) = GetInfluenceBackupRef(current);
+        }
     }
 
     void SquareObserver::NotifyReset(){
@@ -33,6 +49,7 @@ namespace XO{
     void SquareObserver::NotifyResize(ValueT w, ValueT h){
         m_data.resize(Metrics().GetSquareCount());
         m_pieces.resize(Metrics().GetSquareCount(), EMPTY);
+        m_sqdata_stack->resize(Metrics().GetSquareCount());
         Metrics().MakePoints(m_squares);
         m_sq_tracker.Clear();
         m_sq_tracker.Alloc(Metrics().GetSquareCount());
