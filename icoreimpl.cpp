@@ -50,10 +50,10 @@ namespace XO{
     BestMoveInfo ICoreImpl::MakeBestMove(GomocupStoneID i, bool want_report){
         Piece p = GomokuStoneIDtoPiece(i);
 
-        EvaluationManager::Report report;
-        EvaluationManager()(report, m_sq_observer, p);
+        BaseEvaluator::Data links(m_sq_observer);
+        EvaluationManager()(links, p);
 
-        auto bestmove = report.m;
+        auto bestmove = Move(links.result.point, p);
         m_sq_observer.NotifySetPiece(bestmove);
         
         BestMoveInfo result;
@@ -63,7 +63,7 @@ namespace XO{
         result.max_depth_reached = 0;
         result.custom_info = "";
         if(want_report){
-            result.custom_info = report.ToString();
+            result.custom_info = links.result.ToString();
         }
 
         return result;

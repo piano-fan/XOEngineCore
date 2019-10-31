@@ -4,86 +4,49 @@
 #include "statictactics.h"
 #include "tactics_deprecated.h"
 #include "staticevaluation.h"
+#include "baseevaluator.h"
 
 
 namespace XO{
-    class EvaluationManager{
+    class EvaluationManager : public BaseEvaluator{
     public:
-        struct Report{
-            enum Author{
-                STATIC_EVALUATION = 0, STATIC_TACTICS = 1, DEPRECATED_TACTICS = 2
-            };
-
-            Author author;
-            Move m;
-            Piece attacker;
-            DepthT depth;
-
-            std::string ToString() const{
-                constexpr char* AuthorName[] = {
-                        "Static evaluation", "Static tactics", "Deprecated tactics"
-                };
-                return std::string() + AuthorName[author] + ": "
-                        + PieceName[attacker] + " initiative " + m.ToString()
-                        + " Depth: " + std::to_string((int)depth);
-            }
-        };
-
-        void operator()(Report& r_result, const SquareObserver& obs, Piece own) const{
-            if(obs.GetMoveCount() == 0){
-                r_result = Report{
-                        Report::Author::STATIC_EVALUATION
-                        , Move(obs.Metrics().Middle(), own)
-                        , Piece::ALLY
+        void operator()(Data& links, Piece own) const override{
+            if(links.obs.GetMoveCount() == 0){
+                links.result = EvaluationReport(Move(links.obs.Metrics().Middle(), own)
                         , 1
-                };
+                        , EvaluationReport::Mode::UNDEFINED
+                        , EvaluationReport::Type::NONE);
                 return;
             }
 
-            if(Move mv; StaticTactics::SingleMove(mv, obs, own)){
-                r_result = Report{
-                        Report::Author::STATIC_TACTICS
-                        , mv
-                        , Piece::ENEMY
-                        , 1
-                };
+            if(Move mv; StaticTactics::SingleMove(mv, links.obs, own)){
+                links.result = EvaluationReport(mv
+                        , 1, EvaluationReport::Mode::UNDEFINED, EvaluationReport::Type::NONE);
                 return;
             }
 
             {
-                StaticTactics::Report report;
-                StaticTactics()(report, obs, own);
-                if(report.winner != EMPTY){
-                    assert(report.winner == ALLY || report.winner == ENEMY);
-                    r_result = Report{
-                            Report::Author::STATIC_TACTICS
-                            , report.m
-                            , report.winner
-                            , report.depth
-                    };
+                if(P_Final<StaticTactics>()(links, own)){
                     return;
                 }
             }
 
-            if(Move result; Tactics_Deprecated()(result, obs, own)){
-                r_result = Report{
-                        Report::Author::DEPRECATED_TACTICS
-                        , result
-                        , OUT_OF_BOUNDS
+            if(Move result; Tactics_Deprecated()(result, links.obs, own)){
+                links.result = EvaluationReport(result
                         , 1
-                };
+                        , EvaluationReport::Mode::DEPRECATED_TACTICS
+                        , EvaluationReport::Type::SUCCESS);
                 return;
             }
 
             {
                 StaticEvaluator::Report report;
-                StaticEvaluator()(report, obs, own);
-                r_result = Report{
-                        Report::Author::STATIC_EVALUATION
-                        , report.m
-                        , report.attacker
+                StaticEvaluator()(report, links.obs, own);
+                links.result = EvaluationReport(report.m
                         , 1
-                };
+                        , EvaluationReport::Mode::STATIC_EVALUATION
+                        , report.attacker == own ? EvaluationReport::Type::SUCCESS
+                                                 : EvaluationReport::Type::FAIL);
                 return;
             }
         }
