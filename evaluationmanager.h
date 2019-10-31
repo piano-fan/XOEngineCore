@@ -1,7 +1,7 @@
 #ifndef XO_EVALUATIONMANAGER_H
 #define XO_EVALUATIONMANAGER_H
 
-#include "statictactics.h"
+#include "tactics.h"
 #include "tactics_deprecated.h"
 #include "staticevaluation.h"
 #include "baseevaluator.h"
@@ -11,6 +11,8 @@ namespace XO{
     class EvaluationManager : public BaseEvaluator{
     public:
         void operator()(Data& links, Piece own) const override{
+            links.mgr.Reset();
+
             if(links.obs.GetMoveCount() == 0){
                 links.result = EvaluationReport(Move(links.obs.Metrics().Middle(), own)
                         , 1
@@ -25,10 +27,11 @@ namespace XO{
                 return;
             }
 
-            {
-                if(P_Final<StaticTactics>()(links, own)){
-                    return;
-                }
+            static constexpr DepthT DEPTH_LIMIT = -1;
+            links.mgr.SetDepthLimit(DEPTH_LIMIT);
+
+            if(P_Final<Tactics>()(links, own)){
+                return;
             }
 
             if(Move result; Tactics_Deprecated()(result, links.obs, own)){
