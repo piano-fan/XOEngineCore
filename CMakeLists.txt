@@ -3,7 +3,7 @@ project(XO)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(CORE_FILES engineinfo.h icoreimpl.h icoreimpl.cpp staticevaluation.h Include/icore.h Include/builtintypes.h Include/types.h Include/fieldmetrics.h Include/move.h Include/offset_1d.h Include/piece.h Include/point.h Include/staroffset.h Include/math.h evaluationmanager.h report.h statictactics.h tactics_deprecated.h movegenerator.h variationmanager.h positioncache.h)
+set(CORE_FILES engineinfo.h icoreimpl.h icoreimpl.cpp staticevaluation.h Include/icore.h Include/builtintypes.h Include/types.h Include/fieldmetrics.h Include/move.h Include/offset_1d.h Include/piece.h Include/point.h Include/staroffset.h Include/math.h evaluationmanager.h report.h statictactics.h tactics_deprecated.h movegenerator.h variationmanager.h positioncache.h variation.h variationscanner.h position_data.h)
 
 add_library(XO_CORE STATIC ${CORE_FILES})
 add_subdirectory(Observer)

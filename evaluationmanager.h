@@ -6,6 +6,7 @@
 #include "staticevaluation.h"
 #include "report.h"
 #include "variationmanager.h"
+#include "variationscanner.h"
 
 
 namespace XO{
@@ -14,7 +15,8 @@ namespace XO{
 
         VariationManager m_mgr;
 
-        Report m_current_report;
+        bool m_have_position_data;
+        PositionData m_root;
 
     public:
         EvaluationManager(SquareObserver& obs)
@@ -22,7 +24,8 @@ namespace XO{
         {}
 
         void Reset(){
-            m_current_report = Report();
+            m_have_position_data = false;
+            m_root = PositionData();
         }
 
         void ResetStats(){
@@ -32,60 +35,78 @@ namespace XO{
 
         void Calculate(Piece turn){
             const auto& obs = m_obs;
+            auto& mgr = m_mgr;
 
             if(obs.GetMoveCount() == 0){
-                m_current_report = Report{
+                m_root.SetReport(Report{
                         Report::Author::STATIC_EVALUATION
                         , Report::Type::NONE
                         , Move(obs.Metrics().Middle(), turn)
                         , 0
-                };
+                });
                 return;
             }
 
             if(Move mv; StaticTactics::SingleMove(mv, obs, turn)){
-                m_current_report = Report{
+                m_root.SetReport(Report{
                         Report::Author::STATIC_TACTICS
                         , Report::Type::NONE
                         , mv
                         , 2
-                };
+                });
                 return;
             }
 
-            {
-                StaticTactics()(m_current_report, obs, turn);
-                if(m_current_report.Final()){
+            static constexpr DepthT MAX_DEPTH_LIMIT = 100;
+
+            mgr.Reset(turn);
+            mgr.Alloc(MAX_DEPTH_LIMIT + 2);
+
+            for(DepthT depth = MAX_DEPTH_LIMIT; depth <= MAX_DEPTH_LIMIT; depth += 2){
+
+                mgr.SetDepthLimit(depth);
+                ForcedWinCalculator().Calculate(m_root, mgr, turn);
+
+                const auto& report = m_root.GetReport();
+
+                if(report.Final()){
+                    m_have_position_data = true;
                     return;
+                }
+                if(!report.DepthLimit()){
+                    break;
                 }
             }
 
             if(Move result; Tactics_Deprecated()(result, obs, turn)){
-                m_current_report = Report{
+                m_root.SetReport(Report{
                         Report::Author::DEPRECATED_TACTICS
                         , Report::Type::NONE
                         , result
                         , 0
-                };
+                });
                 return;
             }
 
             {
                 StaticEvaluator::Report report;
                 StaticEvaluator()(report, obs, turn);
-                m_current_report = Report{
+                m_root.SetReport(Report{
                         Report::Author::STATIC_EVALUATION
                         , report.attacker == ALLY ? Report::Type::SUCCESS
                                                   : Report::Type::FAIL
                         , report.m
                         , 0
-                };
+                });
                 return;
             }
         }
 
         const Move& GetMove() const{
-            return m_current_report.move;
+            if(m_have_position_data){
+                return m_root.m_best_move;
+            }
+            return m_root.GetReport().move;
         }
 
         uint64_t GetIterationCount() const{
@@ -101,7 +122,10 @@ namespace XO{
         }
 
         std::string ReportToString() const{
-            return m_current_report.ToString();
+            if(m_have_position_data){
+                return m_root.ToString();
+            }
+            return m_root.GetReport().ToString();
         }
     };
 }
