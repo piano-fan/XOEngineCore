@@ -3,6 +3,7 @@
 
 #include "squareinfluence.h"
 #include "squaretracker.h"
+#include "positioncache.h"
 
 
 namespace XO{
@@ -20,6 +21,7 @@ namespace XO{
         SquareTracker<6> m_sq_tracker;
         std::unique_ptr<SqDataStack> m_sqdata_stack;
         DValueT m_movecount;
+        PositionCache m_pos_cache;
 
         Piece& GetPieceRef(Point t){
             return m_pieces[t.GetID()];
@@ -113,6 +115,14 @@ namespace XO{
 
         const SquareTracker_Container& GetTrackedSquares(Piece p, TProperty square_property) const{
             return m_sq_tracker.Get(p, static_cast<ValueT>(square_property));
+        }
+
+        PositionCache& GetPositionCache(){
+            return m_pos_cache;
+        }
+
+        uint64_t PositionCacheSize() const{
+            return m_pos_cache.Size();
         }
 
         void NotifySetPiece(const Move& m);
