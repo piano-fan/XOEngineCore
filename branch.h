@@ -71,8 +71,10 @@ namespace XO{
                     VariationScanner<BranchS4<Scan4SOnly<EvAgent>>>()(links, own, s4gen);
                 }
             }
-            auto pos_ptr = links.mgr.GetPositionDataPtr(own);
-            pos_ptr->data = links.result;
+            if(links.result.Final()){
+                auto pos_ptr = links.mgr.GetPositionDataPtr(own);
+                pos_ptr->data = links.result;
+            }
         }
     };
 }
