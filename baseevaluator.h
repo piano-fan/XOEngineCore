@@ -82,7 +82,7 @@ namespace XO{
             return type == Type::NONE;
         }
 
-        bool OldDepthReport(DepthT current_depth_limit){
+        bool OldDepthReport(DepthT current_depth_limit) const{
             return DepthLimit()
                 && local_depth != current_depth_limit;
         }

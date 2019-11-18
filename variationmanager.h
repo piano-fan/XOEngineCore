@@ -34,8 +34,16 @@ namespace XO{
         }
     };
 
-    struct PositionData : public PositionCache::IData{
-        EvaluationReport data;
+    class PositionData : public PositionCache::IData{
+        EvaluationReport m_data;
+    public:
+        const EvaluationReport& GetReport() const{
+            return m_data;
+        }
+
+        void SetReport(const EvaluationReport& src){
+            m_data = src;
+        }
     };
 
     class VariationManager{
@@ -57,7 +65,7 @@ namespace XO{
             }
             auto data_ptr = static_cast<PositionData*>(&*hook->second);
 
-            if(data_ptr->data.OldDepthReport(GetDepthController().DepthLimit())){
+            if(data_ptr->GetReport().OldDepthReport(GetDepthController().DepthLimit())){
                 m_obs.GetPositionCache().Erase(turn, hook);
                 return nullptr;
             }

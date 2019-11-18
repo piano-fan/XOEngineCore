@@ -48,7 +48,7 @@ namespace XO{
                 EvAgent()(links, own);
             }
             else{
-                links.result = pos_ptr->data;
+                links.result = pos_ptr->GetReport();
             }
 
             if(links.result.Success()){
@@ -74,7 +74,7 @@ namespace XO{
             }
             if(links.result.Final()){
                 auto pos_ptr = links.mgr.GetPositionDataPtr(own);
-                pos_ptr->data = links.result;
+                pos_ptr->SetReport(links.result);
             }
         }
     };
@@ -112,7 +112,7 @@ namespace XO{
                     EvAgent()(next_links, own);
                 }
                 else{
-                    next_links.result = pos_ptr->data;
+                    next_links.result = pos_ptr->GetReport();
                 }
 
                 if(!next_links.result.Success()){
@@ -202,7 +202,7 @@ namespace XO{
                 }
             }
             auto pos_ptr = links.mgr.GetPositionDataPtr(own);
-            pos_ptr->data = links.result;
+            pos_ptr->SetReport(links.result);
         }
     };
 }
