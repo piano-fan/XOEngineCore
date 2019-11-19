@@ -104,26 +104,17 @@ namespace XO{
     class VariationManager;
     class BaseEvaluator{
     public:
-        struct Data{
-            EvaluationReport result;
-            const SquareObserver& obs;
-            VariationManager& mgr;
-            Data(const SquareObserver& obs, VariationManager& mgr)
-                    :result(), obs(obs), mgr(mgr)
-            {}
-            Data(Data& parent)
-                    :result(), obs(parent.obs), mgr(parent.mgr)
-            {}
-        };
-        virtual void operator()(Data& links, Piece own) const = 0;
+        virtual void operator()(EvaluationReport& r_result
+                , VariationManager& mgr, Piece own) const = 0;
     };
 
     template<typename EvAgent>
     class P_Final{
     public:
-        bool operator()(BaseEvaluator::Data& links, Piece own) const{
-            EvAgent()(links, own);
-            return links.result.Final();
+        bool operator()(EvaluationReport& r_result
+                , VariationManager& mgr, Piece own) const{
+            EvAgent()(r_result, mgr, own);
+            return r_result.Final();
         }
     };
 }

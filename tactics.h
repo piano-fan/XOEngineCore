@@ -7,8 +7,8 @@
 namespace XO{
     class Tactics : public BaseEvaluator{
     public:
-        void operator()(Data& links, Piece own) const override{
-            Scan4S3D<StaticTacticsAdapter>()(links, own);
+        void operator()(EvaluationReport& r_result, VariationManager& mgr, Piece own) const override{
+            Scan4S3D<StaticTacticsAdapter>()(r_result, mgr, own);
         }
     };
 }

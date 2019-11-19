@@ -10,12 +10,12 @@
 namespace XO{
     class StaticTacticsAdapter : public StaticTactics, BaseEvaluator{
     public:
-        void operator()(Data& links, Piece own) const override{
+        void operator()(EvaluationReport& r_result, VariationManager& mgr, Piece own) const override{
             Report report;
-            StaticTactics()(report, links.obs, own);
+            StaticTactics()(report, mgr.GetObserver(), own);
             if(report.winner != EMPTY){
                 assert(report.winner == ALLY || report.winner == ENEMY);
-                links.result = EvaluationReport(report.m
+                r_result = EvaluationReport(report.m
                     , report.depth
                     , EvaluationReport::Mode::STATIC_TACTICS
                     , report.winner == ALLY ? EvaluationReport::Type::SUCCESS
@@ -24,8 +24,8 @@ namespace XO{
         }
     };
 
-    static void MakeDepthLimitReport(BaseEvaluator::Data& links, Piece own){
-        links.result = EvaluationReport(links.mgr.GetDepthController().DepthLimit()
+    static void MakeDepthLimitReport(EvaluationReport& r_result, VariationManager& mgr){
+        r_result = EvaluationReport(mgr.GetDepthController().DepthLimit()
                 , EvaluationReport::Mode::DEEP_TACTICS
                 , EvaluationReport::Type::DEPTH_LIMIT);
     }
@@ -37,22 +37,22 @@ namespace XO{
             return TProperty::S4;
         }
 
-        void operator()(BaseEvaluator::Data& links, Piece own) const override{
-            assert(links.obs.SquareCount(own, TProperty::WIN) == 1);
-            auto blocker = links.obs.AnySquare(own, TProperty::WIN);
+        void operator()(EvaluationReport& r_result, VariationManager& mgr, Piece own) const override{
+            assert(mgr.obs.SquareCount(own, TProperty::WIN) == 1);
+            auto blocker = mgr.GetObserver().AnySquare(own, TProperty::WIN);
 
             auto mv = Move(blocker, OppositePiece(own));
-            auto pos_ptr = links.mgr.FindPositionDataPtr(mv);
+            auto pos_ptr = mgr.FindPositionDataPtr(mv);
             if(!pos_ptr){
-                auto v_answer = AutoVariation(links.mgr, mv);
-                EvAgent()(links, own);
+                auto v_answer = AutoVariation(mgr, mv);
+                EvAgent()(r_result, mgr, own);
             }
             else{
-                links.result = pos_ptr->GetReport();
+                r_result = pos_ptr->GetReport();
             }
 
-            if(links.result.Success()){
-                links.result.moves.push_front(Move(blocker, OppositePiece(own)));
+            if(r_result.Success()){
+                r_result.moves.push_front(Move(blocker, OppositePiece(own)));
             }
         }
     };
@@ -60,21 +60,21 @@ namespace XO{
     template<typename EvAgent>
     class Scan4SOnly : public BaseEvaluator{
     public:
-        void operator()(Data& links, Piece own) const override{
-            if(!P_Final<EvAgent>()(links, own)){
-                if(links.mgr.AtMaxDepth()){
-                    if(!MoveGenerator(links.obs, own, TProperty::S4).Empty()){
-                        MakeDepthLimitReport(links, own);
+        void operator()(EvaluationReport& r_result, VariationManager& mgr, Piece own) const override{
+            if(!P_Final<EvAgent>()(r_result, mgr, own)){
+                if(mgr.AtMaxDepth()){
+                    if(!MoveGenerator(mgr.GetObserver(), own, TProperty::S4).Empty()){
+                        MakeDepthLimitReport(r_result, mgr);
                     }
                 }
                 else{
-                    auto s4gen = MoveGenerator(links.obs, own, TProperty::S4);
-                    VariationScanner<BranchS4<Scan4SOnly<EvAgent>>>()(links, own, s4gen);
+                    auto s4gen = MoveGenerator(mgr.GetObserver(), own, TProperty::S4);
+                    VariationScanner<BranchS4<Scan4SOnly<EvAgent>>>()(r_result, mgr, own, s4gen);
                 }
             }
-            if(links.result.Final()){
-                auto pos_ptr = links.mgr.GetPositionDataPtr(own);
-                pos_ptr->SetReport(links.result);
+            if(r_result.Final()){
+                auto pos_ptr = mgr.GetPositionDataPtr(own);
+                pos_ptr->SetReport(r_result);
             }
         }
     };
@@ -86,46 +86,46 @@ namespace XO{
             return TProperty::D3;
         }
 
-        void operator()(BaseEvaluator::Data& links, Piece own) const override{
-            assert(!links.obs.HaveSquares(own, TProperty::WIN));
-            assert(links.obs.HaveSquares(own, TProperty::D4));
-            BaseEvaluator::Data counter_links(links);
-            Scan4SOnly<StaticTacticsAdapter>()(counter_links, OppositePiece(own));
-            if(counter_links.result.Success()){
+        void operator()(EvaluationReport& r_result, VariationManager& mgr, Piece own) const override{
+            assert(!mgr.obs.HaveSquares(own, TProperty::WIN));
+            assert(mgr.obs.HaveSquares(own, TProperty::D4));
+            EvaluationReport counter_report;
+            Scan4SOnly<StaticTacticsAdapter>()(counter_report, mgr, OppositePiece(own));
+            if(counter_report.Success()){
                 return;
             }
 
-            if(counter_links.result.DepthLimit()){
-                links.result = std::move(counter_links.result);
+            if(counter_report.DepthLimit()){
+                r_result = std::move(counter_report);
                 return;   //TODO: обрывать перебор при достижении макс. глубины (false)
             }
 
             assert(!counter_links.result.Fail());
 
             EvaluationReport report_candidate;
-            MoveGenerator d4_blockers(links.obs, OppositePiece(own), TProperty::ANY);
+            MoveGenerator d4_blockers(mgr.GetObserver(), OppositePiece(own), TProperty::ANY);
             for(; d4_blockers.Valid(); d4_blockers.Next()){
-                BaseEvaluator::Data next_links{links};
-                auto pos_ptr = links.mgr.FindPositionDataPtr(d4_blockers.GetMove());
+                EvaluationReport next_report;
+                auto pos_ptr = mgr.FindPositionDataPtr(d4_blockers.GetMove());
                 if(!pos_ptr){
-                    auto v_answer = AutoVariation(links.mgr, d4_blockers.GetMove());
-                    EvAgent()(next_links, own);
+                    auto v_answer = AutoVariation(mgr, d4_blockers.GetMove());
+                    EvAgent()(next_report, mgr, own);
                 }
                 else{
-                    next_links.result = pos_ptr->GetReport();
+                    next_report = pos_ptr->GetReport();
                 }
 
-                if(!next_links.result.Success()){
-                    if(next_links.result.DepthLimit()){
-                        links.result = std::move(next_links.result);
+                if(!next_report.Success()){
+                    if(next_report.DepthLimit()){
+                        r_result = std::move(next_report);
                     }
                     return;
                 }
 
-                next_links.result.moves.push_front(d4_blockers.GetMove());
+                next_report.moves.push_front(d4_blockers.GetMove());
                 if(!report_candidate.Final()
-                   || next_links.result.FullDepth() > report_candidate.FullDepth()){
-                    report_candidate = std::move(next_links.result);
+                   || next_report.FullDepth() > report_candidate.FullDepth()){
+                    report_candidate = std::move(next_report);
                 }
             }
 
@@ -137,72 +137,72 @@ namespace XO{
             }
 
             std::vector<Point> targets;
-            for(MoveGenerator gen(links.obs, OppositePiece(own), TProperty::S4);
+            for(MoveGenerator gen(mgr.GetObserver(), OppositePiece(own), TProperty::S4);
                 gen.Valid(); gen.Next()){
                 targets.push_back(gen.Get());
             }
             for(auto& sq: targets){
                 Move mv(sq, OppositePiece(own));
-                BaseEvaluator::Data blocker_links(links);
+                EvaluationReport blocker_report;
                 //TODO: придумать как вынести отдельной функцией
-                auto v_start = AutoVariation(links.mgr, mv);
-                StaticTacticsAdapter()(blocker_links, own);
-                if(blocker_links.result.Success()){
+                auto v_start = AutoVariation(mgr, mv);
+                StaticTacticsAdapter()(blocker_report, mgr, own);
+                if(blocker_report.Success()){
                     continue;
                 }
-                auto blocker = links.obs.AnySquare(OppositePiece(own), TProperty::WIN);
-                auto v_answer = AutoVariation(links.mgr, Move(blocker, own));
+                auto blocker = mgr.GetObserver().AnySquare(OppositePiece(own), TProperty::WIN);
+                auto v_answer = AutoVariation(mgr, Move(blocker, own));
                 //ODOT:
-                if(links.obs.HaveSquares(own, TProperty::WIN)){
-                    BranchS4<EvAgent>()(blocker_links, own);
+                if(mgr.GetObserver().HaveSquares(own, TProperty::WIN)){
+                    BranchS4<EvAgent>()(blocker_report, mgr, own);
                 }
-                else if(links.obs.HaveSquares(own, TProperty::D4)){
-                    BranchD3<EvAgent>()(blocker_links, own);
+                else if(mgr.GetObserver().HaveSquares(own, TProperty::D4)){
+                    BranchD3<EvAgent>()(blocker_report, mgr, own);
                 }
                 else{
                     return;
                 }
-                if(!blocker_links.result.Success()){
-                    if(blocker_links.result.DepthLimit()){
-                        links.result = std::move(blocker_links.result);
+                if(!blocker_report.Success()){
+                    if(blocker_report.DepthLimit()){
+                        r_result = std::move(blocker_report);
                     }
                     return;
                 }
                 else{
-                    blocker_links.result.moves.push_front(v_answer);
-                    blocker_links.result.moves.push_front(v_start);
-                    if(blocker_links.result.FullDepth() > report_candidate.FullDepth()){
-                        report_candidate = std::move(blocker_links.result);
+                    blocker_report.moves.push_front(v_answer);
+                    blocker_report.moves.push_front(v_start);
+                    if(blocker_report.FullDepth() > report_candidate.FullDepth()){
+                        report_candidate = std::move(blocker_report);
                     }
                 }
             }
 
-            links.result = std::move(report_candidate);
+            r_result = std::move(report_candidate);
         }
     };
 
     template<typename EvAgent>
     class Scan4S3D : public BaseEvaluator{
     public:
-        void operator()(Data& links, Piece own) const override{
-            if(!P_Final<EvAgent>()(links, own)){
-                if(links.mgr.AtMaxDepth()){
-                    if(!MoveGenerator(links.obs, own, TProperty::S4).Empty()
-                     || !MoveGenerator(links.obs, own, TProperty::D3).Empty()){
-                        MakeDepthLimitReport(links, own);
+        void operator()(EvaluationReport& r_result, VariationManager& mgr, Piece own) const override{
+            if(!P_Final<EvAgent>()(r_result, mgr, own)){
+                if(mgr.AtMaxDepth()){
+                    if(!MoveGenerator(mgr.GetObserver(), own, TProperty::S4).Empty()
+                     || !MoveGenerator(mgr.GetObserver(), own, TProperty::D3).Empty()){
+                        MakeDepthLimitReport(r_result, mgr);
                     }
                 }
                 else{
-                    auto s4gen = MoveGenerator(links.obs, own, TProperty::S4);
-                    VariationScanner<BranchS4<Scan4S3D<EvAgent>>>()(links, own, s4gen);
-                    if(!links.result.Final()){
-                        auto d3gen = MoveGenerator(links.obs, own, TProperty::D3);
-                        VariationScanner<BranchD3<Scan4S3D<EvAgent>>>()(links, own, d3gen);
+                    auto s4gen = MoveGenerator(mgr.GetObserver(), own, TProperty::S4);
+                    VariationScanner<BranchS4<Scan4S3D<EvAgent>>>()(r_result, mgr, own, s4gen);
+                    if(!r_result.Final()){
+                        auto d3gen = MoveGenerator(mgr.GetObserver(), own, TProperty::D3);
+                        VariationScanner<BranchD3<Scan4S3D<EvAgent>>>()(r_result, mgr, own, d3gen);
                     }
                 }
             }
-            auto pos_ptr = links.mgr.GetPositionDataPtr(own);
-            pos_ptr->SetReport(links.result);
+            auto pos_ptr = mgr.GetPositionDataPtr(own);
+            pos_ptr->SetReport(r_result);
         }
     };
 }

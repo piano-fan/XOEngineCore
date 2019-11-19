@@ -51,10 +51,10 @@ namespace XO{
     BestMoveInfo ICoreImpl::MakeBestMove(GomocupStoneID i, bool want_report){
         Piece p = GomokuStoneIDtoPiece(i);
 
-        BaseEvaluator::Data links(m_sq_observer, m_var_manager);
-        EvaluationManager()(links, p);
+        EvaluationReport ev_report;
+        EvaluationManager()(ev_report, m_var_manager, p);
 
-        auto bestmove = links.result.moves.front();
+        auto bestmove = ev_report.moves.front();
         m_sq_observer.NotifySetPiece(bestmove);
 
         BestMoveInfo result;
@@ -64,9 +64,9 @@ namespace XO{
         result.max_depth_reached = m_var_manager.GetDepthController().HighestDepth();
         result.custom_info = "";
         if(want_report){
-            result.custom_info = links.result.ToString()
+            result.custom_info = ev_report.ToString()
                     + " Total positions cached: "
-                    + std::to_string(links.mgr.PositionCount());
+                    + std::to_string(m_var_manager.PositionCount());
         }
 
         return result;

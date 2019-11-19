@@ -10,37 +10,37 @@
 namespace XO{
     class EvaluationManager : public BaseEvaluator{
     public:
-        void operator()(Data& links, Piece own) const override{
-            links.mgr.Reset();
+        void operator()(EvaluationReport& r_result, VariationManager& mgr, Piece own) const override{
+            mgr.Reset();
 
-            if(links.obs.GetMoveCount() == 0){
-                links.result = EvaluationReport(Move(links.obs.Metrics().Middle(), own)
+            if(mgr.GetObserver().GetMoveCount() == 0){
+                r_result = EvaluationReport(Move(mgr.GetObserver().Metrics().Middle(), own)
                         , 1
                         , EvaluationReport::Mode::UNDEFINED
                         , EvaluationReport::Type::NONE);
                 return;
             }
 
-            if(Move mv; StaticTactics::SingleMove(mv, links.obs, own)){
-                links.result = EvaluationReport(mv
+            if(Move mv; StaticTactics::SingleMove(mv, mgr.GetObserver(), own)){
+                r_result = EvaluationReport(mv
                         , 1, EvaluationReport::Mode::UNDEFINED, EvaluationReport::Type::NONE);
                 return;
             }
 
             static constexpr DepthT MAX_DEPTH_LIMIT = 18;
             for(auto depth = 2; depth <= MAX_DEPTH_LIMIT; depth += 2){
-                links.result.Clear();
-                links.mgr.SetDepthLimit(depth);
-                if(P_Final<Tactics>()(links, own)){
+                r_result.Clear();
+                mgr.SetDepthLimit(depth);
+                if(P_Final<Tactics>()(r_result, mgr, own)){
                     return;
                 }
-                if(!links.result.DepthLimit()){
+                if(!r_result.DepthLimit()){
                     break;
                 }
             }
 
-            if(Move result; Tactics_Deprecated()(result, links.obs, own)){
-                links.result = EvaluationReport(result
+            if(Move result; Tactics_Deprecated()(result, mgr.GetObserver(), own)){
+                r_result = EvaluationReport(result
                         , 1
                         , EvaluationReport::Mode::DEPRECATED_TACTICS
                         , EvaluationReport::Type::SUCCESS);
@@ -49,8 +49,8 @@ namespace XO{
 
             {
                 StaticEvaluator::Report report;
-                StaticEvaluator()(report, links.obs, own);
-                links.result = EvaluationReport(report.m
+                StaticEvaluator()(report, mgr.GetObserver(), own);
+                r_result = EvaluationReport(report.m
                         , 1
                         , EvaluationReport::Mode::STATIC_EVALUATION
                         , report.attacker == own ? EvaluationReport::Type::SUCCESS
