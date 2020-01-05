@@ -21,6 +21,7 @@ namespace XO{
             }
         }
         ++m_movecount;
+        ++m_iteration_counter;
     }
 
     void SquareObserver::NotifyRemovePiece(const Move& m){
@@ -44,6 +45,7 @@ namespace XO{
         m_pieces.assign(m_pieces.size(), EMPTY);
         m_sq_tracker.Clear();
         m_movecount = 0;
+        ResetIterationCounter();
     }
 
     void SquareObserver::NotifyResize(ValueT w, ValueT h){
@@ -55,6 +57,7 @@ namespace XO{
         m_sq_tracker.Alloc(Metrics().GetSquareCount());
 
         m_movecount = 0;
+        ResetIterationCounter();
         for (const Point &t: m_squares) {
             auto& sqdata = GetInfluenceRef(t);
             sqdata.ClearPSets();

@@ -23,7 +23,7 @@ namespace XO{
         }
 
         void ResetStats(){
-
+            m_obs.ResetIterationCounter();
         }
 
         void Calculate(Piece turn){
@@ -85,7 +85,7 @@ namespace XO{
         }
 
         uint64_t GetIterationCount() const{
-            return 0;
+            return m_obs.GetIterationCount();
         }
 
         uint64_t GetPositionCount() const{
