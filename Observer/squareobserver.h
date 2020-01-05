@@ -23,6 +23,7 @@ namespace XO{
         SquareTracker<6> m_sq_tracker;
 
         DValueT m_movecount;
+        uint64_t m_iteration_counter;
 
         Piece& GetPieceRef(Point t){
             return m_pieces[t.GetID()];
@@ -107,6 +108,14 @@ namespace XO{
             return m_movecount;
         }
 
+        uint64_t GetIterationCount() const{
+            return m_iteration_counter;
+        }
+
+        void ResetIterationCounter(){
+            m_iteration_counter = 0;
+        }
+
         const std::vector<Point>& GetSquares() const{
             return m_squares;
         }
@@ -145,6 +154,10 @@ namespace XO{
             result += "\n" + PieceName[ALLY] + ": " + m_sq_tracker.ToString(ALLY);
             result += "\n" + PieceName[ENEMY] + ": " + m_sq_tracker.ToString(ENEMY);
             return result;
+        }
+
+        std::string ToString() const{
+            return std::string() + "Total iterations: " + std::to_string(GetIterationCount());
         }
     };
 }
