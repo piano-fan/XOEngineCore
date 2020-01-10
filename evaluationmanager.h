@@ -5,17 +5,20 @@
 #include "tactics_deprecated.h"
 #include "staticevaluation.h"
 #include "report.h"
+#include "variationmanager.h"
 
 
 namespace XO{
     class EvaluationManager{
         SquareObserver& m_obs;
 
+        VariationManager m_mgr;
+
         Report m_current_report;
 
     public:
         EvaluationManager(SquareObserver& obs)
-            :m_obs(obs)
+            :m_obs(obs), m_mgr(obs)
         {}
 
         void Reset(){
@@ -24,6 +27,7 @@ namespace XO{
 
         void ResetStats(){
             m_obs.ResetIterationCounter();
+            m_mgr.ResetMaxDepthTracker();
         }
 
         void Calculate(Piece turn){
@@ -93,7 +97,7 @@ namespace XO{
         }
 
         uint64_t GetMaxAchievedDepth() const{
-            return 0;
+            return m_mgr.GetMaxAchievedDepth();
         }
 
         std::string ReportToString() const{
