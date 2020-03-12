@@ -93,7 +93,7 @@ namespace XO{
         }
 
         uint64_t GetPositionCount() const{
-            return 0;
+            return m_mgr.GetPositionCount();
         }
 
         uint64_t GetMaxAchievedDepth() const{
