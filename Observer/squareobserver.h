@@ -3,6 +3,7 @@
 
 #include "squareinfluence.h"
 #include "squaretracker.h"
+#include "positionhash.h"
 
 
 namespace XO{
@@ -24,6 +25,7 @@ namespace XO{
 
         DValueT m_movecount;
         uint64_t m_iteration_counter;
+        PositionHash m_pos_hash;
 
         Piece& GetPieceRef(Point t){
             return m_pieces[t.GetID()];
@@ -70,6 +72,21 @@ namespace XO{
         }
 
     public:
+        class DirtyPositionHashState{
+            PositionHash& m_hash_ref;
+            const Move m_mv;
+        public:
+            DirtyPositionHashState(SquareObserver& obs, const Move& mv)
+                :m_hash_ref(obs.m_pos_hash), m_mv(mv)
+            {
+                m_hash_ref.SetPiece(m_mv);
+            }
+
+            ~DirtyPositionHashState(){
+                m_hash_ref.RemovePiece(m_mv);
+            }
+        };
+
         SquareObserver(const FieldMetrics& m)
                 :m_sqdata_stack(std::make_unique<SqDataStack>())
                 , m_metrics(m)
@@ -142,6 +159,10 @@ namespace XO{
 
         bool Tracked(TProperty square_class) const{
             return m_sq_tracker.Tracked(static_cast<ValueT>(square_class));
+        }
+
+        const PositionHash& GetPositionHashRef() const{
+            return m_pos_hash;
         }
 
         void NotifySetPiece(const Move& m);

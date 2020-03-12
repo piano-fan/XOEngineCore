@@ -8,6 +8,7 @@ namespace XO{
     void SquareObserver::NotifySetPiece(const Move& m){
         GetPieceRef(m.GetPos()) = m.GetTurn();
         ReleaseTrackedSquare(m.GetPos(), GetInfluence(m.GetPos()));
+        m_pos_hash.SetPiece(m);
         for(auto current = StarOffset::Begin(); current.Valid(); ++current){
             Point t = Metrics().MakePoint(m.GetPos(), current);
             if(!Metrics().InBounds(t)){
@@ -28,6 +29,7 @@ namespace XO{
         --m_movecount;
         GetPieceRef(m.GetPos()) = EMPTY;
         InitTrackedSquare(m.GetPos(), GetInfluence(m.GetPos()));
+        m_pos_hash.RemovePiece(m);
         for(auto current = StarOffset::Begin(); current.Valid(); ++current){
             Point t = Metrics().MakePoint(m.GetPos(), current);
             if(!Metrics().InBounds(t)){
@@ -42,6 +44,7 @@ namespace XO{
 
     void SquareObserver::NotifyReset(){
         m_data = m_data_reset_backup;
+        m_pos_hash.Clear();
         m_pieces.assign(m_pieces.size(), EMPTY);
         m_sq_tracker.Clear();
         m_movecount = 0;
@@ -50,6 +53,7 @@ namespace XO{
 
     void SquareObserver::NotifyResize(ValueT w, ValueT h){
         m_data.resize(Metrics().GetSquareCount());
+        m_pos_hash.Resize(w * h);
         m_pieces.resize(Metrics().GetSquareCount(), EMPTY);
         m_sqdata_stack->resize(Metrics().GetSquareCount());
         Metrics().MakePoints(m_squares);
