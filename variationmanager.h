@@ -2,6 +2,7 @@
 #define XO_VARIATIONMANAGER_H
 
 #include "squareobserver.h"
+#include "positioncache.h"
 
 
 namespace XO{
@@ -11,6 +12,7 @@ namespace XO{
 
     private:
         SquareObserver& m_obs;
+        PositionCache m_cache;
         Piece m_own;
         MoveList m_moves;
         DepthT m_root_depth;
@@ -30,6 +32,7 @@ namespace XO{
             m_own = own;
             m_root_depth = m_obs.GetMoveCount();
             m_depth_limit = 0;
+            m_cache.Clear();
         }
 
         void ResetMaxDepthTracker(){
@@ -59,6 +62,19 @@ namespace XO{
             return m_obs;
         }
 
+        PositionCache& GetPositionCache(){
+            return m_cache;
+        }
+
+        const PositionHash& GetPositionHashRef() const{
+            return m_obs.GetPositionHashRef();
+        }
+
+        PositionCache::HookT& GetPositionCacheHook(const Move& mv){
+            SquareObserver::DirtyPositionHashState destructor(m_obs, mv);
+            return GetPositionCache().GetHookByKey(m_obs.GetPositionHashRef());
+        }
+
         const MoveList& Moves() const{
             return m_moves;
         }
@@ -69,6 +85,10 @@ namespace XO{
 
         DepthT GetMaxAchievedDepth() const{
             return m_max_achieved_depth;
+        }
+
+        uint64_t GetPositionCount() const{
+            return m_cache.Size();
         }
 
         bool AtMaxDepth() const{
