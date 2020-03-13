@@ -11,8 +11,9 @@ namespace XO{
         S4 = 2, D3 = 3,
         FORK = 4,
         D3_D3 = 5,
-        ANY = 6,
-        COUNT = 7
+        M2_M2 = 6,
+        ANY = 7,
+        COUNT = 8
     };
 
     const std::string TPropertyName[]{
@@ -20,6 +21,7 @@ namespace XO{
             "S4", "D3",
             "Fork",
             "D3+D3",
+            "M2+M2",
             "Any"
     };
 
@@ -60,6 +62,9 @@ namespace XO{
             Set(TProperty::D3_D3,
                 primary.GetFullTier() == Threat(3, 1).GetFullTier()
              && secondary.GetFullTier() == Threat(3, 1).GetFullTier());
+            Set(TProperty::M2_M2,
+                primary.GetMixedTier() == Threat(3, 0).GetMixedTier()
+             && secondary.GetMixedTier() == Threat(3, 0).GetMixedTier());
             Set(TProperty::ANY, true);
         }
 

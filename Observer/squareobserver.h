@@ -21,7 +21,7 @@ namespace XO{
         std::vector<SquareInfluence> m_data;
         std::vector<Piece> m_pieces;
 
-        SquareTracker<6> m_sq_tracker;
+        SquareTracker<7> m_sq_tracker;
 
         DValueT m_movecount;
         uint64_t m_iteration_counter;
