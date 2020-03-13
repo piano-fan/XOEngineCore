@@ -4,6 +4,7 @@
 #include "movegenerator.h"
 #include "variation.h"
 
+
 namespace XO{
     static void CloneChildData(PositionData& dst, const Variation& var){
         dst.m_report = var.GetData().m_report;
@@ -55,7 +56,7 @@ namespace XO{
         void TestVariation(PositionData& target, VariationManager& mgr, const Move& mv) const;
 
         void TryScanVariations(PositionData& target, VariationManager& mgr, Piece turn) const{
-            for(auto& sqclass: {TProperty::S4, TProperty::D3}){
+            for(auto& sqclass: {TProperty::S4, TProperty::D3, TProperty::M2_M2}){
                 std::list<Point> targets[4];
                 for(auto gen = MoveGenerator(mgr.GetObserver(), turn, sqclass)
                     ; gen.Valid(); gen.Next()){
@@ -85,6 +86,32 @@ namespace XO{
             else if(mgr.GetObserver().HaveSquares(attacker, TProperty::D4)){
                 BranchD3(target, mgr, turn);
                 return;
+            }
+
+            PositionData null_data;
+            ForcedWinCalculator().Calculate(null_data, mgr, OppositePiece(turn));
+            if(!null_data.GetReport().Success()){
+                return;
+            }
+
+            auto& obs = mgr.GetObserver();
+            for(auto &sq: obs.GetSquares()){
+                auto mv = Move(sq, turn);
+
+                if(obs.GetPiece(sq) != EMPTY){
+                    continue;
+                }
+
+                Variation var(ForcedWinCalculator(), mgr, mv);
+                if(!var.GetData().GetReport().Success()){
+                    CloneChildData(target, var);
+                    return;
+                }
+
+                if ( !target.GetReport()
+                  || var.GetData().FullDepth() > target.FullDepth()){
+                    CloneChildData(target, var);
+                }
             }
         }
 

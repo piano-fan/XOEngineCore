@@ -72,7 +72,7 @@ namespace XO{
 
         PositionCache::HookT& GetPositionCacheHook(const Move& mv){
             SquareObserver::DirtyPositionHashState destructor(m_obs, mv);
-            return GetPositionCache().GetHookByKey(m_obs.GetPositionHashRef());
+            return GetPositionCache().GetHookByKey(mv.GetTurn(), m_obs.GetPositionHashRef());
         }
 
         const MoveList& Moves() const{

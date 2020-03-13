@@ -52,10 +52,12 @@ namespace XO{
                     :BaseHelper(obs, mv.GetTurn(), sq_class)
             {
                 m_current = mv.GetPos();
+                //TODO: fix workaround (add some logic to decide if there is reload)
+                bool not_s4_d3_tmp_workaround = (sq_class != TProperty::S4 && sq_class != TProperty::D3);
                 bool indirect_d3_reload = (sq_class == TProperty::D3)   //TODO: not only D3
                                     && m_obs->HaveSquares(GetMove().GetTurn(), TProperty::D4);
                 m_empty = (!m_obs->GetTactics(GetMove()).GetProperty(m_square_class)
-                              && !indirect_d3_reload)
+                              && !indirect_d3_reload && !not_s4_d3_tmp_workaround)
                           || (m_square_class != TProperty::S4
                               && !StaticTactics::FullBlocker(*m_obs, GetMove(), TProperty::D4));
                 Reset();

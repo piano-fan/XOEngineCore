@@ -16,19 +16,20 @@ namespace XO{
         using ContainerT = std::map<KeyT, HookT>;
         using IterT = ContainerT::iterator;
 
-        ContainerT m_data;
+        ContainerT m_data[2];
 
     public:
-        HookT& GetHookByKey(const KeyT& key){
-            return m_data[key];
+        HookT& GetHookByKey(Piece p, const KeyT& key){
+            return m_data[p][key];
         }
 
         void Clear(){
-            m_data.clear();
+            m_data[ALLY].clear();
+            m_data[ENEMY].clear();
         }
 
         uint64_t Size() const{
-            return m_data.size();
+            return m_data[ALLY].size() + m_data[ENEMY].size();
         }
     };
 }
