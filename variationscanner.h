@@ -56,7 +56,7 @@ namespace XO{
         void TestVariation(PositionData& target, VariationManager& mgr, const Move& mv) const;
 
         void TryScanVariations(PositionData& target, VariationManager& mgr, Piece turn) const{
-            for(auto& sqclass: {TProperty::S4, TProperty::D3, TProperty::M2_M2}){
+            for(auto& sqclass: {TProperty::S4, TProperty::D3}){
                 std::list<Point> targets[4];
                 for(auto gen = MoveGenerator(mgr.GetObserver(), turn, sqclass)
                     ; gen.Valid(); gen.Next()){
@@ -65,6 +65,30 @@ namespace XO{
                 }
                 for(auto& builder_tier: {3, 2, 1, 0})
                 for(auto& sq: targets[builder_tier]){
+                    TestVariation(target, mgr, Move(sq, turn));
+                    if(target.m_report.Success()){
+                        return;
+                    }
+                }
+            }
+
+            if(Move mv; StaticTactics::SingleMove(mv, mgr.GetObserver(), turn)){
+                TestVariation(target, mgr, mv);
+                return;
+            }
+
+            VariationManager::DepthTicket token(mgr);
+            if(!token){
+                return;
+            }
+
+            for(auto& sqclass: {TProperty::M2_M2}){
+                std::list<Point> targets;
+                for(auto gen = MoveGenerator(mgr.GetObserver(), turn, sqclass)
+                    ; gen.Valid(); gen.Next()){
+                    targets.push_back(gen.Get());
+                }
+                for(auto& sq: targets){
                     TestVariation(target, mgr, Move(sq, turn));
                     if(target.m_report.Success()){
                         return;
@@ -93,6 +117,12 @@ namespace XO{
             if(!null_data.GetReport().Success()){
                 return;
             }
+
+            target.SetReport(Report(
+                Report::Author::STATIC_TACTICS
+                , Report::Type::SUCCESS
+                , Move()
+                , 0));
 
             auto& obs = mgr.GetObserver();
             for(auto &sq: obs.GetSquares()){

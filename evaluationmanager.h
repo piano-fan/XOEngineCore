@@ -57,14 +57,14 @@ namespace XO{
                 return;
             }
 
-            static constexpr DepthT MAX_DEPTH_LIMIT = 18;
+            static constexpr DepthT MAX_DEPTH_LIMIT = 10;
 
             mgr.Reset(turn);
             mgr.Alloc(MAX_DEPTH_LIMIT + 2);
 
             for(DepthT depth = 2; depth <= MAX_DEPTH_LIMIT; depth += 2){
 
-                mgr.SetDepthLimit(depth);
+                mgr.SetDepthLimit(depth, 2);
                 ForcedWinCalculator().Calculate(m_root, mgr, turn);
 
                 const auto& report = m_root.GetReport();

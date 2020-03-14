@@ -18,8 +18,33 @@ namespace XO{
         DepthT m_root_depth;
         DepthT m_depth_limit;
         DepthT m_max_achieved_depth;
+        DepthT m_depth_token_remainder;
 
     public:
+        class DepthTicket{
+            VariationManager& m_mgr;
+            bool m_valid;
+        public:
+            DepthTicket(VariationManager& mgr)
+                :m_mgr(mgr)
+            {
+                m_valid = m_mgr.m_depth_token_remainder;
+                if(m_valid){
+                    --m_mgr.m_depth_token_remainder;
+                }
+            }
+
+            ~DepthTicket(){
+                if(m_valid){
+                    ++m_mgr.m_depth_token_remainder;
+                }
+            }
+
+            operator bool(){
+                return m_valid;
+            }
+        };
+
         VariationManager(SquareObserver& obs)
             :m_obs(obs), m_root_depth(0), m_depth_limit(0)
         {}
@@ -43,8 +68,9 @@ namespace XO{
             return m_depth_limit;
         }
 
-        void SetDepthLimit(DepthT depth_limit){
+        void SetDepthLimit(DepthT depth_limit, DepthT tokens){
             m_depth_limit = depth_limit;
+            m_depth_token_remainder = tokens;
         }
 
         void MakeMove(const Move& m){
