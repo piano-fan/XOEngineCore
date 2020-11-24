@@ -56,6 +56,10 @@ namespace XO{
 
     class PositionHash{
         std::vector<PieceSet32> m_data;
+
+        int PSet_ID(DOffsetT sq_id) const { return sq_id >> 5; }        //sq_id / 32
+        int PSetItem_ID(DOffsetT sq_id) const { return sq_id & 0x1F; }  //sq_id % 32
+
     public:
         void Resize(DValueT sq_count){
             m_data.resize((sq_count - 1) / 32 + 1, PieceSet32());
@@ -65,20 +69,20 @@ namespace XO{
             m_data.assign(m_data.size(), PieceSet32());
         }
 
-        Piece GetPiece(Point t) const{
-            return m_data[t.GetID() / 32].GetPiece(t.GetID() % 32);
+        Piece GetPiece(DOffsetT sq_id) const{
+            return m_data[PSet_ID(sq_id)].GetPiece(PSetItem_ID(sq_id));
         }
 
-        void SetPiece(Piece p, Point t){
-            m_data[t.GetID() / 32].SetPiece(p, t.GetID() % 32);
+        void SetPiece(Piece p, DOffsetT sq_id){
+            m_data[PSet_ID(sq_id)].SetPiece(p, PSetItem_ID(sq_id));
         }
 
         void SetPiece(const Move& m){
-            SetPiece(m.GetTurn(), m.GetPos());
+            SetPiece(m.GetTurn(), m.GetPos().GetID());
         }
 
         void RemovePiece(const Move& m){
-            SetPiece(EMPTY, m.GetPos());
+            SetPiece(EMPTY, m.GetPos().GetID());
         }
 
         bool operator<(const PositionHash& other) const{
