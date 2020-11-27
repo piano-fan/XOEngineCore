@@ -143,7 +143,7 @@ namespace XO{
                 }
 
                 for(; m_offset.Valid(); ++m_offset){
-                    m_current = m_obs->Metrics().MakePoint(m_center, m_offset);
+                    m_current = m_center.Move(m_offset);
                     if(m_obs->ValidMove(GetMove())
                        && CurrentIsOK()){
                         m_valid = true;

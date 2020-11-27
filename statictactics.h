@@ -11,7 +11,7 @@ namespace XO{
         static bool Blocks(const SquareObserver& obs, const Move& m,
                            StarOffset target, TacticSet to_block){
             assert(target.Valid());
-            auto target_point = obs.Metrics().MakePoint(m.GetPos(), target);
+            auto target_point = m.GetPos().Move(target);
             assert(obs.ValidMove(target_point));
             assert(obs.GetTactics(Move(target_point, OppositePiece(m.GetTurn()))).AnyOf(to_block));
             auto influence = obs.GetInfluence(target_point);
@@ -28,12 +28,10 @@ namespace XO{
                 return true;
             }
 
-            auto offset = obs.Metrics().MakeOffset(m.GetPos(), target);
-            if(!offset.Valid()){
-                return false;
-            }
+            Point diff = target - m.GetPos();
+            if (!diff.IsStarOffset()) return false;
 
-            return Blocks(obs, m, offset, to_block);
+            return Blocks(obs, m, Point::MakeOffset(diff), to_block);
         }
 
         static bool FullBlocker(const SquareObserver &obs, const Move &m

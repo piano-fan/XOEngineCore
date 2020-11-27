@@ -18,7 +18,7 @@ namespace XO{
                     return true;
                 }
                 for(auto current = StarOffset::Begin(); current.Valid(); ++current){
-                    Point next = obs.Metrics().MakePoint(center, current);
+                    Point next = center.Move(current);
                     if(!obs.ValidMove(next)
                        || obs.GetThreats(Move(next, attacker))[0].GetTier() < 3  //"cant block"
                        || !StaticTactics::FullBlocker(obs, Move(next, turn)

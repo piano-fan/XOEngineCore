@@ -11,7 +11,7 @@ namespace XO{
         ReleaseTrackedSquare(m.GetPos(), GetInfluence(m.GetPos()));
         m_pos_hash.SetPiece(m);
         for(auto current = StarOffset::Begin(); current.Valid(); ++current){
-            Point t = Metrics().MakePoint(m.GetPos(), current);
+            Point t = m.GetPos().Move(current);
             if(!Metrics().InBounds(t)){
                 continue;
             }
@@ -32,7 +32,7 @@ namespace XO{
         InitTrackedSquare(m.GetPos(), GetInfluence(m.GetPos()));
         m_pos_hash.RemovePiece(m);
         for(auto current = StarOffset::Begin(); current.Valid(); ++current){
-            Point t = Metrics().MakePoint(m.GetPos(), current);
+            Point t = m.GetPos().Move(current);
             if(!Metrics().InBounds(t)){
                 continue;
             }
@@ -69,7 +69,7 @@ namespace XO{
             sqdata.ClearPSets();
 
             for(auto current = StarOffset::Begin(); current.Valid(); ++current){
-                auto sq = Metrics().MakePoint(t, current);
+                auto sq = t.Move(current);
                 if(!Metrics().InBounds(sq)){
                     sqdata.AddBounds(current);
                     //TODO: достаточно отметить границу 1 раз
