@@ -7,4 +7,4 @@ set(XO_THREAT_FILES pieceset.h threat.h threat.cpp threatcache.h threatcache.cpp
 
 add_library(XO_THREAT STATIC ${XO_THREAT_FILES})
 
-target_include_directories(XO_THREAT PUBLIC ../../Include)
+target_include_directories(XO_THREAT PUBLIC ../../Include ../../../../)

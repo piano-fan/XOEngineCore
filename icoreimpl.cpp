@@ -43,7 +43,7 @@ namespace XO{
     void ICoreImpl::Set(unsigned int x, unsigned int y, GomocupStoneID i) {
         //TODO: Renju forbidden moves
         Piece p = GomokuStoneIDtoPiece(i);
-        m_sq_observer.NotifySetPiece(Move(m_metrics.MakePoint(x, y), p));
+        m_sq_observer.NotifySetPiece(Move(Point(x, y), p));
     }
 
     void ICoreImpl::BeginSession(){
@@ -74,7 +74,7 @@ namespace XO{
 
     bool ICoreImpl::IsOver(unsigned int x, unsigned int y, GomocupStoneID i) const{
         Piece p = GomokuStoneIDtoPiece(i);
-        auto lastmove = Move(m_metrics.MakePoint(x, y), p);
+        auto lastmove = Move(Point(x, y), p);
         return (m_sq_observer.GetMoveCount() >= m_metrics.GetSquareCount())
             || m_sq_observer.IsWin(lastmove);
     }
@@ -84,7 +84,7 @@ namespace XO{
     };
 
     std::string ICoreImpl::GetSquareCacheRepr(unsigned int x, unsigned int y) const{
-        return m_sq_observer.ToString(m_metrics.MakePoint(x, y));
+        return m_sq_observer.ToString(Point(x, y));
     }
     std::unique_ptr<ICore> MakeCore()
     {

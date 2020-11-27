@@ -33,7 +33,9 @@ namespace XO{
             }
 
             if(!bestvalue[ALLY] && !bestvalue[ENEMY]){
-                for(auto& sq: obs.GetSquares()){
+                for (OffsetT y = 0; y < obs.Metrics().GetHeight(); ++y)
+                for (OffsetT x = 0; x < obs.Metrics().GetWidth(); ++x) {
+                    Point sq(x, y);
                     if(obs.GetPiece(sq) != EMPTY){
                         continue;
                     }

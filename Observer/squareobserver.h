@@ -10,7 +10,6 @@ namespace XO{
     class FieldMetrics;
     class SquareObserver{
         const FieldMetrics& m_metrics;
-        std::vector<Point> m_squares;
 
         static std::vector<SquareInfluence> m_data_reset_backup;
 
@@ -131,10 +130,6 @@ namespace XO{
 
         void ResetIterationCounter(){
             m_iteration_counter = 0;
-        }
-
-        const std::vector<Point>& GetSquares() const{
-            return m_squares;
         }
 
         const FieldMetrics& Metrics() const{

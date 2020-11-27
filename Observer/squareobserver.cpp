@@ -3,6 +3,7 @@
 
 namespace XO{
     std::vector<SquareInfluence> SquareObserver::m_data_reset_backup;
+    ValueT Point::m_width;  //TODO: fix
 
 
     void SquareObserver::NotifySetPiece(const Move& m){
@@ -56,13 +57,14 @@ namespace XO{
         m_pos_hash.Resize(w * h);
         m_pieces.resize(Metrics().GetSquareCount(), EMPTY);
         m_sqdata_stack->resize(Metrics().GetSquareCount());
-        Metrics().MakePoints(m_squares);
         m_sq_tracker.Clear();
         m_sq_tracker.Alloc(Metrics().GetSquareCount());
 
         m_movecount = 0;
         ResetIterationCounter();
-        for (const Point &t: m_squares) {
+        for (OffsetT y = 0; y < m_metrics.GetHeight(); ++y)
+        for (OffsetT x = 0; x < m_metrics.GetWidth(); ++x) {
+            Point t(x, y);
             auto& sqdata = GetInfluenceRef(t);
             sqdata.ClearPSets();
 

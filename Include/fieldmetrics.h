@@ -32,33 +32,23 @@ namespace XO{
                 :m_width(0), m_height(0), m_square_count(0)
         {}
 
-        void MakePoints(std::vector<Point>& r_points) const{
-            r_points.resize(m_square_count);
-            for(DValueT id = 0; id < m_square_count; id++){
-                r_points[id] = Point(id % m_width, id / m_width, id);
-            }
-        }
-
         void Init(ValueT w, ValueT h){
+            Point::m_width = w; //TODO: fix
+
             m_width = w;
             m_height = h;
             m_square_count = w*h;
             for(int i = 0; i < 4; i++){
-                m_offset[i][1] = Point(Direction::m_X[i], Direction::m_Y[i]
-                        , Direction::m_X[i] + Direction::m_Y[i] * w);
-                m_offset[i][0] = -Point(Direction::m_X[i], Direction::m_Y[i]
-                        , Direction::m_X[i] + Direction::m_Y[i] * w);
+                m_offset[i][1] = Point(Direction::m_X[i], Direction::m_Y[i]);
+                m_offset[i][0] = -Point(Direction::m_X[i], Direction::m_Y[i]);
             }
 
             for(auto current = StarOffset::Begin(); current.Valid(); ++current){
                 auto &ref = m_star_offset[current.ID()];
-                ref = MakePoint(0, 0);
-                for(int i = 0; i <= current.Distance(); ++i){
-                    ref += GetOffset(current.Angle(), current.Forward());
-                }
+                ref = GetOffset(current.Angle(), current.Forward()) * (current.Distance() + 1);
             }
 
-            m_middle = MakePoint(m_width >> 1, m_height >> 1);
+            m_middle = Point(m_width >> 1, m_height >> 1);
         }
 
         ValueT GetWidth() const{
@@ -86,10 +76,6 @@ namespace XO{
             return center + m_star_offset[d.ID()];
         }
 
-        Point MakePoint(OffsetT x, OffsetT y) const{
-            return Point(x, y, x + y * m_width);
-        }
-
         Point Middle() const{
             return m_middle;
         }
@@ -99,24 +85,26 @@ namespace XO{
             assert(vec.GetX() != 0 || vec.GetY() != 0);
             OffsetT dir_x = sign(vec.GetX());
             OffsetT dir_y = sign(vec.GetY());
-            ValueT abs_x = abs(vec.GetX()) - 1;
-            ValueT abs_y = abs(vec.GetY()) - 1;
+            OffsetT abs_x = abs(vec.GetX()) - 1;
+            OffsetT abs_y = abs(vec.GetY()) - 1;
+
+            if (abs_x >= 4 || abs_y >= 4) return StarOffset::End();
 
             StarOffset result = StarOffset::End();
             bool forward;
-            if(vec.GetX() == 0 && abs_y < 4){
+            if(vec.GetX() == 0){
                 forward = (dir_y == Direction::m_Y[Direction::Y]);
                 result = StarOffset(Direction::Y, forward, abs_y);
             }
-            if(vec.GetY() == 0 && abs_x < 4){
+            if(vec.GetY() == 0){
                 forward = (dir_x == Direction::m_X[Direction::X]);
                 result = StarOffset(Direction::X, forward, abs_x);
             }
-            if(vec.GetX() == vec.GetY() && abs_x < 4){
+            if(vec.GetX() == vec.GetY()){
                 forward = (dir_x == Direction::m_X[Direction::XY]);
                 result = StarOffset(Direction::XY, forward, abs_x);
             }
-            if(vec.GetX() == -vec.GetY() && abs_x < 4){
+            if(vec.GetX() == -vec.GetY()){
                 forward = (dir_x == Direction::m_X[Direction::YX]);
                 result = StarOffset(Direction::YX, forward, abs_x);
             }
